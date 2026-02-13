@@ -12,6 +12,7 @@ A classic snake game built with TypeScript and HTML5 Canvas, bundled with Vite.
 
 ## Coming soon
 - 2.5 D mode with isometric view and 3D snake rendering
+- 2 snakes at once
 
 ## Controls
 
