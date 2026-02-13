@@ -10,6 +10,9 @@ A classic snake game built with TypeScript and HTML5 Canvas, bundled with Vite.
 - **Pause/resume** - press `P` at any time during gameplay
 - **Dark theme** with a green/red color scheme
 
+## Coming soon
+- 2.5 D mode with isometric view and 3D snake rendering
+
 ## Controls
 
 | Key | Action |
