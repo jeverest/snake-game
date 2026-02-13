@@ -3,6 +3,8 @@ import './style.css'
 type Position = { x: number; y: number }
 type Direction = 'UP' | 'DOWN' | 'LEFT' | 'RIGHT'
 
+const CANVAS_SIZE = 300
+
 class SnakeGame {
   private canvas: HTMLCanvasElement
   private ctx: CanvasRenderingContext2D
@@ -11,7 +13,8 @@ class SnakeGame {
   private direction: Direction = 'RIGHT'
   private nextDirection: Direction = 'RIGHT'
   private gridSize: number = 10
-  private cellSize: number = 30
+  private cellSize: number = CANVAS_SIZE / this.gridSize
+  private initialGridSize: number = 10
   private score: number = 0
   private level: number = 1
   private gameSpeed: number = 200
@@ -30,8 +33,9 @@ class SnakeGame {
   }
 
   private updateCanvasSize() {
-    this.canvas.width = this.gridSize * this.cellSize
-    this.canvas.height = this.gridSize * this.cellSize
+    this.canvas.width = CANVAS_SIZE
+    this.canvas.height = CANVAS_SIZE
+    this.cellSize = CANVAS_SIZE / this.gridSize
   }
 
   private setupEventListeners() {
@@ -45,6 +49,24 @@ class SnakeGame {
       if (!this.isGameOver && this.gameLoop !== null) {
         this.togglePause()
       }
+      return
+    }
+
+    if ((e.key === '+' || e.key === '=' || e.key === '-' || e.key === '_') &&
+        !this.gameStarted && !this.isGameOver &&
+        !document.getElementById('game')!.classList.contains('hidden')) {
+      if (e.key === '+' || e.key === '=') {
+        this.initialGridSize = Math.min(this.initialGridSize + 5, 50)
+      } else {
+        this.initialGridSize = Math.max(this.initialGridSize - 5, 5)
+      }
+      this.gridSize = this.initialGridSize
+      this.updateCanvasSize()
+      const center = Math.floor(this.gridSize / 2)
+      this.snake = [{ x: center, y: center }]
+      this.spawnFood()
+      this.updateUI()
+      this.draw()
       return
     }
 
@@ -100,10 +122,10 @@ class SnakeGame {
   }
 
   startNewGame() {
-    this.gridSize = 10
-    this.cellSize = 30
+    this.gridSize = this.initialGridSize
     this.updateCanvasSize()
-    this.snake = [{ x: 5, y: 5 }]
+    const center = Math.floor(this.gridSize / 2)
+    this.snake = [{ x: center, y: center }]
     this.direction = 'RIGHT'
     this.nextDirection = 'RIGHT'
     this.score = 0
