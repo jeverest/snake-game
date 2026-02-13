@@ -41,11 +41,6 @@ class SnakeGame {
   }
 
   private handleKeyPress(e: KeyboardEvent) {
-    if (e.key === 'r' || e.key === 'R') {
-      this.startNewGame()
-      return
-    }
-
     if (e.key === 'p' || e.key === 'P') {
       if (!this.isGameOver && this.gameLoop !== null) {
         this.togglePause()
@@ -121,7 +116,6 @@ class SnakeGame {
     this.spawnFood()
     this.updateUI()
     this.showScreen('game')
-    document.getElementById('pause')!.classList.add('hidden')
 
     if (this.gameLoop) clearInterval(this.gameLoop)
     this.gameLoop = null
