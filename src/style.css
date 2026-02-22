@@ -93,6 +93,8 @@ button:active {
   border: 3px solid #333;
   box-shadow: 0 0 20px rgba(74, 222, 128, 0.2);
   background-color: #1a1a1a;
+  max-width: 95vw;
+  height: auto;
 }
 
 .game-info {
