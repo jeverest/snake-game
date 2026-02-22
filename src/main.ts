@@ -3,7 +3,8 @@ import './style.css'
 type Position = { x: number; y: number }
 type Direction = 'UP' | 'DOWN' | 'LEFT' | 'RIGHT'
 
-const ISO_MAX_WIDTH = 500
+const ISO_MIN_WIDTH = 300
+const ISO_MAX_WIDTH = 1200
 
 class SnakeGame {
   private canvas: HTMLCanvasElement
@@ -29,7 +30,11 @@ class SnakeGame {
   private basisXy: number = 0
   private basisYx: number = 0
   private basisYy: number = 0
-  private blockHeight: number = 0
+  private baseBlockHeight: number = 0
+  private perspectiveStrength: number = 0.4
+  private focalLength: number = Infinity
+  private rawMaxY: number = 0
+  private rawCenterX: number = 0
   private isoOriginX: number = 0
   private isoOriginY: number = 0
   private isoCache: { x: number; y: number }[][] = []
@@ -40,12 +45,23 @@ class SnakeGame {
     this.updateCanvasSize()
     this.loadHighScore()
     this.setupEventListeners()
+    window.addEventListener('resize', () => { this.updateCanvasSize(); this.draw() })
+  }
+
+  private getIsoWidth(): number {
+    // Leave room for page padding (2rem = 32px each side) and canvas border (3px each side)
+    const available = window.innerWidth - 70
+    return Math.max(ISO_MIN_WIDTH, Math.min(available, ISO_MAX_WIDTH))
   }
 
   private toIso(gridX: number, gridY: number): { x: number; y: number } {
+    const rawX = gridX * this.basisXx + gridY * this.basisYx
+    const rawY = gridX * this.basisXy + gridY * this.basisYy
+    const d = this.rawMaxY - rawY
+    const scale = this.focalLength === Infinity ? 1 : this.focalLength / (this.focalLength + d)
     return {
-      x: gridX * this.basisXx + gridY * this.basisYx + this.isoOriginX,
-      y: gridX * this.basisXy + gridY * this.basisYy + this.isoOriginY
+      x: (this.rawCenterX + (rawX - this.rawCenterX) * scale) + this.isoOriginX,
+      y: (this.rawMaxY - d * scale) + this.isoOriginY
     }
   }
 
@@ -54,36 +70,53 @@ class SnakeGame {
     const sinA = Math.sin(this.isoAngle)
     const pr = this.perspectiveRatio
 
-    // Scale so the diamond's horizontal extent = ISO_MAX_WIDTH
-    const scale = ISO_MAX_WIDTH / (this.gridSize * (cosA + sinA))
+    // Scale so the grid fits within the viewport-derived width at any rotation angle
+    const isoWidth = this.getIsoWidth()
+    const scale = isoWidth / (this.gridSize * Math.SQRT2)
 
     this.basisXx = cosA * scale
     this.basisXy = sinA * scale * pr
     this.basisYx = -sinA * scale
     this.basisYy = cosA * scale * pr
 
-    // Tile vertical span (top-to-bottom of one diamond tile)
-    this.blockHeight = (this.basisXy + this.basisYy) * 0.6
+    // Rotation-invariant block height: use fixed scale * pr * sqrt(2) instead of
+    // angle-dependent (basisXy + basisYy) so blocks stay the same height at all angles
+    this.baseBlockHeight = scale * pr * Math.SQRT2 * 0.6
 
-    // Compute diamond extents from corner positions
+    // Compute raw iso corner positions (before perspective and origin offset)
     const N = this.gridSize
-    const corners = [
+    const rawCorners = [
       { x: 0, y: 0 },
       { x: N * this.basisXx, y: N * this.basisXy },
       { x: N * this.basisYx, y: N * this.basisYy },
       { x: N * (this.basisXx + this.basisYx), y: N * (this.basisXy + this.basisYy) }
     ]
-    const minX = Math.min(...corners.map(c => c.x))
-    const maxX = Math.max(...corners.map(c => c.x))
-    const minY = Math.min(...corners.map(c => c.y))
-    const maxY = Math.max(...corners.map(c => c.y))
 
+    this.rawMaxY = Math.max(...rawCorners.map(c => c.y))
+    const rawMinY = Math.min(...rawCorners.map(c => c.y))
+    this.rawCenterX = (Math.min(...rawCorners.map(c => c.x)) + Math.max(...rawCorners.map(c => c.x))) / 2
+
+    const depthRange = Math.max(this.rawMaxY - rawMinY, 0.001)
+    this.focalLength = this.perspectiveStrength > 0 ? depthRange / this.perspectiveStrength : Infinity
+
+    // Fixed canvas size: max possible extent at any rotation angle
     const padding = 20
-    this.canvas.width = (maxX - minX) + padding * 2
-    this.canvas.height = (maxY - minY) + padding + padding + this.blockHeight
+    const canvasInnerW = isoWidth
+    const canvasInnerH = isoWidth * pr
+    this.canvas.width = canvasInnerW + padding * 2
+    this.canvas.height = canvasInnerH + padding * 2 + this.baseBlockHeight
 
-    this.isoOriginX = -minX + padding
-    this.isoOriginY = -minY + padding
+    // Anchor grid center to canvas center so rotation pivots smoothly
+    const half = this.gridSize / 2
+    const gcRawX = half * (this.basisXx + this.basisYx)
+    const gcRawY = half * (this.basisXy + this.basisYy)
+    const gcD = this.rawMaxY - gcRawY
+    const gcS = this.focalLength === Infinity ? 1 : this.focalLength / (this.focalLength + gcD)
+    const gcProjX = this.rawCenterX + (gcRawX - this.rawCenterX) * gcS
+    const gcProjY = this.rawMaxY - gcD * gcS
+
+    this.isoOriginX = this.canvas.width / 2 - gcProjX
+    this.isoOriginY = this.canvas.height / 2 - gcProjY
 
     // Build isoCache[gy][gx] for grid intersection points
     this.isoCache = []
@@ -169,6 +202,14 @@ class SnakeGame {
     ctx.stroke()
   }
 
+  private getBlockHeight(gx: number, gy: number): number {
+    if (this.focalLength === Infinity) return this.baseBlockHeight
+    const centerRawY = (gx + 0.5) * this.basisXy + (gy + 0.5) * this.basisYy
+    const d = this.rawMaxY - centerRawY
+    const scale = this.focalLength / (this.focalLength + d)
+    return this.baseBlockHeight * scale
+  }
+
   private drawBlockShadow(gx: number, gy: number) {
     const inset = 0.05
     const top = this.toIso(gx + inset, gy + inset)
@@ -189,40 +230,60 @@ class SnakeGame {
 
   private drawBlock(gx: number, gy: number, topColor: string, rightColor: string, leftColor: string) {
     const inset = 0.05
-    const bh = this.blockHeight
+    const bh = this.getBlockHeight(gx, gy)
     const ctx = this.ctx
 
-    const topLeft = this.toIso(gx + inset, gy + inset)
-    const topRight = this.toIso(gx + 1 - inset, gy + inset)
-    const bottomRight = this.toIso(gx + 1 - inset, gy + 1 - inset)
-    const bottomLeft = this.toIso(gx + inset, gy + 1 - inset)
+    // Corners clockwise: TL, TR, BR, BL
+    const c = [
+      this.toIso(gx + inset, gy + inset),
+      this.toIso(gx + 1 - inset, gy + inset),
+      this.toIso(gx + 1 - inset, gy + 1 - inset),
+      this.toIso(gx + inset, gy + 1 - inset)
+    ]
 
-    // Left face (front-left side)
-    ctx.beginPath()
-    ctx.moveTo(bottomLeft.x, bottomLeft.y - bh)
-    ctx.lineTo(bottomLeft.x, bottomLeft.y)
-    ctx.lineTo(bottomRight.x, bottomRight.y)
-    ctx.lineTo(bottomRight.x, bottomRight.y - bh)
-    ctx.closePath()
-    ctx.fillStyle = leftColor
-    ctx.fill()
+    // 4 side faces defined by clockwise edges; classify as front or back
+    // Outward normal Y = a.x - b.x; visible (front) when > 0
+    const backFaces: number[] = []
+    const frontFaces: number[] = []
+    for (let i = 0; i < 4; i++) {
+      const a = c[i], b = c[(i + 1) % 4]
+      if (a.x > b.x) frontFaces.push(i)
+      else if (a.x < b.x) backFaces.push(i)
+    }
 
-    // Right face (front-right side)
-    ctx.beginPath()
-    ctx.moveTo(bottomRight.x, bottomRight.y - bh)
-    ctx.lineTo(bottomRight.x, bottomRight.y)
-    ctx.lineTo(topRight.x, topRight.y)
-    ctx.lineTo(topRight.x, topRight.y - bh)
-    ctx.closePath()
-    ctx.fillStyle = rightColor
-    ctx.fill()
+    // Draw back faces first so front faces paint over them
+    for (const i of backFaces) {
+      const a = c[i], b = c[(i + 1) % 4]
+      ctx.beginPath()
+      ctx.moveTo(a.x, a.y - bh)
+      ctx.lineTo(a.x, a.y)
+      ctx.lineTo(b.x, b.y)
+      ctx.lineTo(b.x, b.y - bh)
+      ctx.closePath()
+      ctx.fillStyle = leftColor
+      ctx.fill()
+    }
+
+    // Draw front faces; use outward normal X to pick light/dark shading
+    for (const i of frontFaces) {
+      const a = c[i], b = c[(i + 1) % 4]
+      const normalX = b.y - a.y
+      ctx.beginPath()
+      ctx.moveTo(a.x, a.y - bh)
+      ctx.lineTo(a.x, a.y)
+      ctx.lineTo(b.x, b.y)
+      ctx.lineTo(b.x, b.y - bh)
+      ctx.closePath()
+      ctx.fillStyle = normalX > 0 ? rightColor : leftColor
+      ctx.fill()
+    }
 
     // Top face
     ctx.beginPath()
-    ctx.moveTo(topLeft.x, topLeft.y - bh)
-    ctx.lineTo(topRight.x, topRight.y - bh)
-    ctx.lineTo(bottomRight.x, bottomRight.y - bh)
-    ctx.lineTo(bottomLeft.x, bottomLeft.y - bh)
+    ctx.moveTo(c[0].x, c[0].y - bh)
+    ctx.lineTo(c[1].x, c[1].y - bh)
+    ctx.lineTo(c[2].x, c[2].y - bh)
+    ctx.lineTo(c[3].x, c[3].y - bh)
     ctx.closePath()
     ctx.fillStyle = topColor
     ctx.fill()
@@ -315,6 +376,20 @@ class SnakeGame {
 
     if (e.key === 'e' || e.key === 'E') {
       this.isoAngle += Math.PI / 36  // rotate counter-clockwise by 5°
+      this.updateCanvasSize()
+      this.draw()
+      return
+    }
+
+    if (e.key === '[') {
+      this.perspectiveStrength = Math.max(this.perspectiveStrength - 0.05, 0)
+      this.updateCanvasSize()
+      this.draw()
+      return
+    }
+
+    if (e.key === ']') {
+      this.perspectiveStrength = Math.min(this.perspectiveStrength + 0.05, 0.8)
       this.updateCanvasSize()
       this.draw()
       return
