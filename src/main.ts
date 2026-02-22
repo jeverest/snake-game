@@ -3,7 +3,7 @@ import './style.css'
 type Position = { x: number; y: number }
 type Direction = 'UP' | 'DOWN' | 'LEFT' | 'RIGHT'
 
-const CANVAS_SIZE = 300
+const ISO_MAX_WIDTH = 500
 
 class SnakeGame {
   private canvas: HTMLCanvasElement
@@ -13,7 +13,6 @@ class SnakeGame {
   private direction: Direction = 'RIGHT'
   private nextDirection: Direction = 'RIGHT'
   private gridSize: number = 10
-  private cellSize: number = CANVAS_SIZE / this.gridSize
   private initialGridSize: number = 10
   private score: number = 0
   private level: number = 1
@@ -24,6 +23,17 @@ class SnakeGame {
   private isGameOver: boolean = false
   private gameStarted: boolean = false
 
+  private isoAngle: number = Math.PI / 3 // z-rotation: 30° (45° = standard diamond)
+  private perspectiveRatio: number = 0.5  // vertical squash for top-down tilt
+  private basisXx: number = 0
+  private basisXy: number = 0
+  private basisYx: number = 0
+  private basisYy: number = 0
+  private blockHeight: number = 0
+  private isoOriginX: number = 0
+  private isoOriginY: number = 0
+  private isoCache: { x: number; y: number }[][] = []
+
   constructor() {
     this.canvas = document.getElementById('canvas') as HTMLCanvasElement
     this.ctx = this.canvas.getContext('2d')!
@@ -32,10 +42,231 @@ class SnakeGame {
     this.setupEventListeners()
   }
 
+  private toIso(gridX: number, gridY: number): { x: number; y: number } {
+    return {
+      x: gridX * this.basisXx + gridY * this.basisYx + this.isoOriginX,
+      y: gridX * this.basisXy + gridY * this.basisYy + this.isoOriginY
+    }
+  }
+
   private updateCanvasSize() {
-    this.canvas.width = CANVAS_SIZE
-    this.canvas.height = CANVAS_SIZE
-    this.cellSize = CANVAS_SIZE / this.gridSize
+    const cosA = Math.cos(this.isoAngle)
+    const sinA = Math.sin(this.isoAngle)
+    const pr = this.perspectiveRatio
+
+    // Scale so the diamond's horizontal extent = ISO_MAX_WIDTH
+    const scale = ISO_MAX_WIDTH / (this.gridSize * (cosA + sinA))
+
+    this.basisXx = cosA * scale
+    this.basisXy = sinA * scale * pr
+    this.basisYx = -sinA * scale
+    this.basisYy = cosA * scale * pr
+
+    // Tile vertical span (top-to-bottom of one diamond tile)
+    this.blockHeight = (this.basisXy + this.basisYy) * 0.6
+
+    // Compute diamond extents from corner positions
+    const N = this.gridSize
+    const corners = [
+      { x: 0, y: 0 },
+      { x: N * this.basisXx, y: N * this.basisXy },
+      { x: N * this.basisYx, y: N * this.basisYy },
+      { x: N * (this.basisXx + this.basisYx), y: N * (this.basisXy + this.basisYy) }
+    ]
+    const minX = Math.min(...corners.map(c => c.x))
+    const maxX = Math.max(...corners.map(c => c.x))
+    const minY = Math.min(...corners.map(c => c.y))
+    const maxY = Math.max(...corners.map(c => c.y))
+
+    const padding = 20
+    this.canvas.width = (maxX - minX) + padding * 2
+    this.canvas.height = (maxY - minY) + padding + padding + this.blockHeight
+
+    this.isoOriginX = -minX + padding
+    this.isoOriginY = -minY + padding
+
+    // Build isoCache[gy][gx] for grid intersection points
+    this.isoCache = []
+    for (let gy = 0; gy <= this.gridSize; gy++) {
+      this.isoCache[gy] = []
+      for (let gx = 0; gx <= this.gridSize; gx++) {
+        this.isoCache[gy][gx] = this.toIso(gx, gy)
+      }
+    }
+  }
+
+  private drawGroundPlane() {
+    const ctx = this.ctx
+    const lightPath = new Path2D()
+    const darkPath = new Path2D()
+
+    for (let gy = 0; gy < this.gridSize; gy++) {
+      for (let gx = 0; gx < this.gridSize; gx++) {
+        const top = this.isoCache[gy][gx]
+        const right = this.isoCache[gy][gx + 1]
+        const bottom = this.isoCache[gy + 1][gx + 1]
+        const left = this.isoCache[gy + 1][gx]
+
+        const path = (gx + gy) % 2 === 0 ? lightPath : darkPath
+        path.moveTo(top.x, top.y)
+        path.lineTo(right.x, right.y)
+        path.lineTo(bottom.x, bottom.y)
+        path.lineTo(left.x, left.y)
+        path.closePath()
+      }
+    }
+
+    ctx.fillStyle = '#2a2a2a'
+    ctx.fill(lightPath)
+    ctx.fillStyle = '#222222'
+    ctx.fill(darkPath)
+  }
+
+  private drawGridLines() {
+    // Skip grid lines when tiles are too small
+    const tileScreenWidth = Math.abs(this.basisXx) + Math.abs(this.basisYx)
+    if (tileScreenWidth < 5) return
+
+    const ctx = this.ctx
+    ctx.beginPath()
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)'
+    ctx.lineWidth = 0.5
+
+    // Lines along the gx axis (varying gy)
+    for (let gy = 0; gy <= this.gridSize; gy++) {
+      const start = this.isoCache[gy][0]
+      const end = this.isoCache[gy][this.gridSize]
+      ctx.moveTo(start.x, start.y)
+      ctx.lineTo(end.x, end.y)
+    }
+
+    // Lines along the gy axis (varying gx)
+    for (let gx = 0; gx <= this.gridSize; gx++) {
+      const start = this.isoCache[0][gx]
+      const end = this.isoCache[this.gridSize][gx]
+      ctx.moveTo(start.x, start.y)
+      ctx.lineTo(end.x, end.y)
+    }
+
+    ctx.stroke()
+  }
+
+  private drawGroundBorder() {
+    const ctx = this.ctx
+    const topCorner = this.isoCache[0][0]
+    const rightCorner = this.isoCache[0][this.gridSize]
+    const bottomCorner = this.isoCache[this.gridSize][this.gridSize]
+    const leftCorner = this.isoCache[this.gridSize][0]
+
+    ctx.beginPath()
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)'
+    ctx.lineWidth = 2
+    ctx.moveTo(topCorner.x, topCorner.y)
+    ctx.lineTo(rightCorner.x, rightCorner.y)
+    ctx.lineTo(bottomCorner.x, bottomCorner.y)
+    ctx.lineTo(leftCorner.x, leftCorner.y)
+    ctx.closePath()
+    ctx.stroke()
+  }
+
+  private drawBlockShadow(gx: number, gy: number) {
+    const inset = 0.05
+    const top = this.toIso(gx + inset, gy + inset)
+    const right = this.toIso(gx + 1 - inset, gy + inset)
+    const bottom = this.toIso(gx + 1 - inset, gy + 1 - inset)
+    const left = this.toIso(gx + inset, gy + 1 - inset)
+
+    const ctx = this.ctx
+    ctx.beginPath()
+    ctx.moveTo(top.x, top.y)
+    ctx.lineTo(right.x, right.y)
+    ctx.lineTo(bottom.x, bottom.y)
+    ctx.lineTo(left.x, left.y)
+    ctx.closePath()
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)'
+    ctx.fill()
+  }
+
+  private drawBlock(gx: number, gy: number, topColor: string, rightColor: string, leftColor: string) {
+    const inset = 0.05
+    const bh = this.blockHeight
+    const ctx = this.ctx
+
+    const topLeft = this.toIso(gx + inset, gy + inset)
+    const topRight = this.toIso(gx + 1 - inset, gy + inset)
+    const bottomRight = this.toIso(gx + 1 - inset, gy + 1 - inset)
+    const bottomLeft = this.toIso(gx + inset, gy + 1 - inset)
+
+    // Left face (front-left side)
+    ctx.beginPath()
+    ctx.moveTo(bottomLeft.x, bottomLeft.y - bh)
+    ctx.lineTo(bottomLeft.x, bottomLeft.y)
+    ctx.lineTo(bottomRight.x, bottomRight.y)
+    ctx.lineTo(bottomRight.x, bottomRight.y - bh)
+    ctx.closePath()
+    ctx.fillStyle = leftColor
+    ctx.fill()
+
+    // Right face (front-right side)
+    ctx.beginPath()
+    ctx.moveTo(bottomRight.x, bottomRight.y - bh)
+    ctx.lineTo(bottomRight.x, bottomRight.y)
+    ctx.lineTo(topRight.x, topRight.y)
+    ctx.lineTo(topRight.x, topRight.y - bh)
+    ctx.closePath()
+    ctx.fillStyle = rightColor
+    ctx.fill()
+
+    // Top face
+    ctx.beginPath()
+    ctx.moveTo(topLeft.x, topLeft.y - bh)
+    ctx.lineTo(topRight.x, topRight.y - bh)
+    ctx.lineTo(bottomRight.x, bottomRight.y - bh)
+    ctx.lineTo(bottomLeft.x, bottomLeft.y - bh)
+    ctx.closePath()
+    ctx.fillStyle = topColor
+    ctx.fill()
+  }
+
+  private draw() {
+    const ctx = this.ctx
+    ctx.fillStyle = '#1a1a1a'
+    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
+
+    this.drawGroundPlane()
+    this.drawGridLines()
+    this.drawGroundBorder()
+
+    // Collect all objects to render
+    const objects: { x: number; y: number; type: 'head' | 'body' | 'food' }[] = []
+
+    this.snake.forEach((segment, index) => {
+      objects.push({ x: segment.x, y: segment.y, type: index === 0 ? 'head' : 'body' })
+    })
+    objects.push({ x: this.food.x, y: this.food.y, type: 'food' })
+
+    // Sort back-to-front (painter's algorithm): lower (x+y) drawn first
+    objects.sort((a, b) => (a.x + a.y) - (b.x + b.y))
+
+    // Draw shadows first
+    for (const obj of objects) {
+      this.drawBlockShadow(obj.x, obj.y)
+    }
+
+    // Draw blocks
+    for (const obj of objects) {
+      switch (obj.type) {
+        case 'head':
+          this.drawBlock(obj.x, obj.y, '#4ade80', '#22c55e', '#16a34a')
+          break
+        case 'body':
+          this.drawBlock(obj.x, obj.y, '#22c55e', '#16a34a', '#15803d')
+          break
+        case 'food':
+          this.drawBlock(obj.x, obj.y, '#ef4444', '#dc2626', '#b91c1c')
+          break
+      }
+    }
   }
 
   private setupEventListeners() {
@@ -58,8 +289,8 @@ class SnakeGame {
     }
 
     if ((e.key === '+' || e.key === '=' || e.key === '-' || e.key === '_') &&
-        !this.gameStarted && !this.isGameOver &&
-        !document.getElementById('game')!.classList.contains('hidden')) {
+      !this.gameStarted && !this.isGameOver &&
+      !document.getElementById('game')!.classList.contains('hidden')) {
       if (e.key === '+' || e.key === '=') {
         this.initialGridSize = Math.min(this.initialGridSize + 5, 50)
       } else {
@@ -71,6 +302,20 @@ class SnakeGame {
       this.snake = [{ x: center, y: center }]
       this.spawnFood()
       this.updateUI()
+      this.draw()
+      return
+    }
+
+    if (e.key === 'q' || e.key === 'Q') {
+      this.isoAngle -= Math.PI / 36  // rotate clockwise by 5°
+      this.updateCanvasSize()
+      this.draw()
+      return
+    }
+
+    if (e.key === 'e' || e.key === 'E') {
+      this.isoAngle += Math.PI / 36  // rotate counter-clockwise by 5°
+      this.updateCanvasSize()
       this.draw()
       return
     }
@@ -222,44 +467,6 @@ class SnakeGame {
       }
     } while (this.snake.some(segment => segment.x === newFood.x && segment.y === newFood.y))
     this.food = newFood
-  }
-
-  private draw() {
-    this.ctx.fillStyle = '#1a1a1a'
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
-
-    this.ctx.strokeStyle = '#333'
-    for (let i = 0; i <= this.gridSize; i++) {
-      this.ctx.beginPath()
-      this.ctx.moveTo(i * this.cellSize, 0)
-      this.ctx.lineTo(i * this.cellSize, this.canvas.height)
-      this.ctx.stroke()
-
-      this.ctx.beginPath()
-      this.ctx.moveTo(0, i * this.cellSize)
-      this.ctx.lineTo(this.canvas.width, i * this.cellSize)
-      this.ctx.stroke()
-    }
-
-    this.ctx.fillStyle = '#4ade80'
-    this.snake.forEach((segment, index) => {
-      const brightness = index === 0 ? '#4ade80' : '#22c55e'
-      this.ctx.fillStyle = brightness
-      this.ctx.fillRect(
-        segment.x * this.cellSize + 1,
-        segment.y * this.cellSize + 1,
-        this.cellSize - 2,
-        this.cellSize - 2
-      )
-    })
-
-    this.ctx.fillStyle = '#ef4444'
-    this.ctx.fillRect(
-      this.food.x * this.cellSize + 1,
-      this.food.y * this.cellSize + 1,
-      this.cellSize - 2,
-      this.cellSize - 2
-    )
   }
 
   private updateUI() {
