@@ -306,8 +306,10 @@ class SnakeGame {
     })
     objects.push({ x: this.food.x, y: this.food.y, type: 'food' })
 
-    // Sort back-to-front (painter's algorithm): lower (x+y) drawn first
-    objects.sort((a, b) => (a.x + a.y) - (b.x + b.y))
+    // Sort back-to-front (painter's algorithm): lower projected Y drawn first
+    objects.sort((a, b) =>
+      (a.x * this.basisXy + a.y * this.basisYy) - (b.x * this.basisXy + b.y * this.basisYy)
+    )
 
     // Draw shadows first
     for (const obj of objects) {
