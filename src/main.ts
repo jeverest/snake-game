@@ -339,6 +339,13 @@ class SnakeGame {
   }
 
   private handleKeyPress(e: KeyboardEvent) {
+    if (e.key === 'Enter') {
+      if (!this.gameStarted || this.isGameOver) {
+        this.startNewGame()
+        return
+      }
+    }
+
     if (e.key === 'R') {
       this.startNewGame()
       return
