@@ -4,8 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
+    "tangle": "node scripts/tangle.mjs",
+    "dev": "node scripts/tangle.mjs && vite",
+    "build": "node scripts/tangle.mjs && tsc && vite build",
     "preview": "vite preview"
   },
   "devDependencies": {

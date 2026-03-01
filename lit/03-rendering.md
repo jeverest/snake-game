@@ -1,60 +1,24 @@
-// Generated from lit/*.md — edits here should be synced back to lit files
-import './style.css'
+# Rendering
 
-type Position = { x: number; y: number }
-type Direction = 'UP' | 'DOWN' | 'LEFT' | 'RIGHT'
+All rendering uses a 2.5D isometric projection with optional perspective foreshortening. Grid coordinates are transformed to screen space via a pair of basis vectors derived from the current rotation angle and perspective ratio.
 
-const ISO_MIN_WIDTH = 300
-const ISO_MAX_WIDTH = 1200
+## Viewport width
 
-class SnakeGame {
-  private canvas: HTMLCanvasElement
-  private ctx: CanvasRenderingContext2D
-  private snake: Position[] = []
-  private food: Position = { x: 0, y: 0 }
-  private direction: Direction = 'RIGHT'
-  private nextDirection: Direction = 'RIGHT'
-  private gridSize: number = 10
-  private initialGridSize: number = 10
-  private score: number = 0
-  private level: number = 1
-  private gameSpeed: number = 200
-  private baseSpeed: number = 200
-  private gameLoop: number | null = null
-  private isPaused: boolean = false
-  private isGameOver: boolean = false
-  private gameStarted: boolean = false
+The isometric viewport is sized to fit the browser window, clamped between minimum and maximum bounds. A 70px deduction accounts for page padding and canvas border.
 
-  private isoAngle: number = Math.PI / 3 // z-rotation: 30° (45° = standard diamond)
-  private perspectiveRatio: number = 0.5  // vertical squash for top-down tilt
-  private basisXx: number = 0
-  private basisXy: number = 0
-  private basisYx: number = 0
-  private basisYy: number = 0
-  private baseBlockHeight: number = 0
-  private perspectiveStrength: number = 0.4
-  private focalLength: number = Infinity
-  private rawMaxY: number = 0
-  private rawCenterX: number = 0
-  private isoOriginX: number = 0
-  private isoOriginY: number = 0
-  private isoCache: { x: number; y: number }[][] = []
-
-  constructor() {
-    this.canvas = document.getElementById('canvas') as HTMLCanvasElement
-    this.ctx = this.canvas.getContext('2d')!
-    this.updateCanvasSize()
-    this.loadHighScore()
-    this.setupEventListeners()
-    window.addEventListener('resize', () => { this.updateCanvasSize(); this.draw() })
-  }
-
+```ts {file=src/main.ts}
   private getIsoWidth(): number {
     // Leave room for page padding (2rem = 32px each side) and canvas border (3px each side)
     const available = window.innerWidth - 70
     return Math.max(ISO_MIN_WIDTH, Math.min(available, ISO_MAX_WIDTH))
   }
+```
 
+## Isometric projection
+
+`toIso` transforms a grid coordinate to screen space. It computes the raw affine position using the precomputed basis vectors, then applies perspective scaling based on depth (distance from the front edge). Points further from the viewer are scaled toward the vanishing point.
+
+```ts {file=src/main.ts}
   private toIso(gridX: number, gridY: number): { x: number; y: number } {
     const rawX = gridX * this.basisXx + gridY * this.basisYx
     const rawY = gridX * this.basisXy + gridY * this.basisYy
@@ -65,7 +29,13 @@ class SnakeGame {
       y: (this.rawMaxY - d * scale) + this.isoOriginY
     }
   }
+```
 
+## Canvas sizing and projection setup
+
+`updateCanvasSize` recomputes the entire projection whenever the grid size, rotation angle, or window size changes. It derives the 2×2 basis matrix from the angle and perspective ratio, scales it to fit the viewport, computes the perspective focal length from depth range, sizes the canvas, centers the grid, and builds a cache of all projected grid intersection points.
+
+```ts {file=src/main.ts}
   private updateCanvasSize() {
     const cosA = Math.cos(this.isoAngle)
     const sinA = Math.sin(this.isoAngle)
@@ -128,7 +98,13 @@ class SnakeGame {
       }
     }
   }
+```
 
+## Ground plane
+
+The ground is a checkerboard of dark and darker tiles. Each cell is drawn as a diamond (quadrilateral) using the four cached corner projections. Two `Path2D` objects batch all light and dark tiles to minimize draw calls.
+
+```ts {file=src/main.ts}
   private drawGroundPlane() {
     const ctx = this.ctx
     const lightPath = new Path2D()
@@ -155,7 +131,13 @@ class SnakeGame {
     ctx.fillStyle = '#222222'
     ctx.fill(darkPath)
   }
+```
 
+## Grid lines
+
+Faint white grid lines are drawn along both axes, but only when tiles are large enough to be visible (at least 5px wide). This prevents visual noise at high zoom levels.
+
+```ts {file=src/main.ts}
   private drawGridLines() {
     // Skip grid lines when tiles are too small
     const tileScreenWidth = Math.abs(this.basisXx) + Math.abs(this.basisYx)
@@ -184,7 +166,13 @@ class SnakeGame {
 
     ctx.stroke()
   }
+```
 
+## Ground border
+
+A subtle white border outlines the full grid perimeter using the four corner projections.
+
+```ts {file=src/main.ts}
   private drawGroundBorder() {
     const ctx = this.ctx
     const topCorner = this.isoCache[0][0]
@@ -202,7 +190,17 @@ class SnakeGame {
     ctx.closePath()
     ctx.stroke()
   }
+```
 
+## Block rendering
+
+Blocks are the 3D-looking cubes that represent the snake and food. Each block has a top face and up to four side faces. `getBlockHeight` scales the base height by perspective so blocks near the front appear larger.
+
+`drawBlockShadow` draws a dark footprint on the ground plane beneath the block. A small inset prevents shadow bleeding into adjacent tiles.
+
+`drawBlock` renders the full 3D block. It classifies each of the four side faces as front-facing or back-facing using the outward normal, draws back faces first (so front faces paint over them), then draws front faces with light/dark shading based on normal direction, and finally the top face.
+
+```ts {file=src/main.ts}
   private getBlockHeight(gx: number, gy: number): number {
     if (this.focalLength === Infinity) return this.baseBlockHeight
     const centerRawY = (gx + 0.5) * this.basisXy + (gy + 0.5) * this.basisYy
@@ -289,7 +287,13 @@ class SnakeGame {
     ctx.fillStyle = topColor
     ctx.fill()
   }
+```
 
+## Main draw loop
+
+`draw` clears the canvas, renders the ground (checkerboard, grid lines, border), then collects all game objects (snake segments and food) and sorts them back-to-front by projected Y for correct depth ordering. Shadows are drawn in a first pass, then blocks in a second pass so shadows appear beneath all blocks.
+
+```ts {file=src/main.ts}
   private draw() {
     const ctx = this.ctx
     ctx.fillStyle = '#1a1a1a'
@@ -332,273 +336,4 @@ class SnakeGame {
       }
     }
   }
-
-  private update() {
-    if (this.isPaused || this.isGameOver) return
-
-    this.direction = this.nextDirection
-    const head = { ...this.snake[0] }
-
-    switch (this.direction) {
-      case 'UP': head.y--; break
-      case 'DOWN': head.y++; break
-      case 'LEFT': head.x--; break
-      case 'RIGHT': head.x++; break
-    }
-
-    if (this.checkCollision(head)) {
-      this.endGame()
-      return
-    }
-
-    this.snake.unshift(head)
-
-    if (head.x === this.food.x && head.y === this.food.y) {
-      this.score++
-      this.spawnFood()
-      this.checkGridExpansion()
-    } else {
-      this.snake.pop()
-    }
-
-    this.draw()
-    this.updateUI()
-  }
-
-  private checkCollision(head: Position): boolean {
-    if (head.x < 0 || head.x >= this.gridSize || head.y < 0 || head.y >= this.gridSize) {
-      return true
-    }
-    return this.snake.some(segment => segment.x === head.x && segment.y === head.y)
-  }
-
-  private spawnFood() {
-    let newFood: Position
-    do {
-      newFood = {
-        x: Math.floor(Math.random() * this.gridSize),
-        y: Math.floor(Math.random() * this.gridSize)
-      }
-    } while (this.snake.some(segment => segment.x === newFood.x && segment.y === newFood.y))
-    this.food = newFood
-  }
-
-  private setupEventListeners() {
-    document.addEventListener('keydown', this.handleKeyPress.bind(this))
-    document.getElementById('new-game')!.addEventListener('click', () => this.startNewGame())
-    document.getElementById('play-again')!.addEventListener('click', () => this.startNewGame())
-  }
-
-  private handleKeyPress(e: KeyboardEvent) {
-    if (e.key === 'Enter') {
-      if (!this.gameStarted || this.isGameOver) {
-        this.startNewGame()
-        return
-      }
-    }
-
-    if (e.key === 'R') {
-      this.startNewGame()
-      return
-    }
-
-    if (e.key === 'p' || e.key === 'P') {
-      if (!this.isGameOver && this.gameLoop !== null) {
-        this.togglePause()
-      }
-      return
-    }
-
-    if ((e.key === '+' || e.key === '=' || e.key === '-' || e.key === '_') &&
-      !this.gameStarted && !this.isGameOver &&
-      !document.getElementById('game')!.classList.contains('hidden')) {
-      if (e.key === '+' || e.key === '=') {
-        this.initialGridSize = Math.min(this.initialGridSize + 5, 50)
-      } else {
-        this.initialGridSize = Math.max(this.initialGridSize - 5, 5)
-      }
-      this.gridSize = this.initialGridSize
-      this.updateCanvasSize()
-      const center = Math.floor(this.gridSize / 2)
-      this.snake = [{ x: center, y: center }]
-      this.spawnFood()
-      this.updateUI()
-      this.draw()
-      return
-    }
-
-    if (e.key === 'q' || e.key === 'Q') {
-      this.isoAngle -= Math.PI / 36  // rotate clockwise by 5°
-      this.updateCanvasSize()
-      this.draw()
-      return
-    }
-
-    if (e.key === 'e' || e.key === 'E') {
-      this.isoAngle += Math.PI / 36  // rotate counter-clockwise by 5°
-      this.updateCanvasSize()
-      this.draw()
-      return
-    }
-
-    if (e.key === '[') {
-      this.perspectiveStrength = Math.max(this.perspectiveStrength - 0.05, 0)
-      this.updateCanvasSize()
-      this.draw()
-      return
-    }
-
-    if (e.key === ']') {
-      this.perspectiveStrength = Math.min(this.perspectiveStrength + 0.05, 0.8)
-      this.updateCanvasSize()
-      this.draw()
-      return
-    }
-
-    if (this.isPaused || this.isGameOver) return
-
-    const keyMap: Record<string, Direction> = {
-      'ArrowUp': 'UP',
-      'ArrowDown': 'DOWN',
-      'ArrowLeft': 'LEFT',
-      'ArrowRight': 'RIGHT',
-      'w': 'UP',
-      'W': 'UP',
-      'a': 'LEFT',
-      'A': 'LEFT',
-      's': 'DOWN',
-      'S': 'DOWN',
-      'd': 'RIGHT',
-      'D': 'RIGHT'
-    }
-
-    const newDirection = keyMap[e.key]
-    if (newDirection) {
-      if (this.isValidDirection(newDirection)) {
-        this.nextDirection = newDirection
-
-        // Start the game on first directional input
-        if (!this.gameStarted) {
-          this.gameStarted = true
-          this.gameLoop = window.setInterval(() => this.update(), this.gameSpeed)
-        }
-      }
-    }
-  }
-
-  private isValidDirection(newDirection: Direction): boolean {
-    const opposites: Record<Direction, Direction> = {
-      'UP': 'DOWN',
-      'DOWN': 'UP',
-      'LEFT': 'RIGHT',
-      'RIGHT': 'LEFT'
-    }
-    return opposites[this.direction] !== newDirection
-  }
-
-  private togglePause() {
-    this.isPaused = !this.isPaused
-    const pauseScreen = document.getElementById('pause')!
-    if (this.isPaused) {
-      pauseScreen.classList.remove('hidden')
-    } else {
-      pauseScreen.classList.add('hidden')
-    }
-  }
-
-  private updateUI() {
-    document.getElementById('score')!.textContent = this.score.toString()
-    document.getElementById('level')!.textContent = this.level.toString()
-    document.getElementById('grid-size')!.textContent = `${this.gridSize}x${this.gridSize}`
-  }
-
-  private showScreen(screenId: string) {
-    document.querySelectorAll('.screen:not(.overlay)').forEach(screen => {
-      screen.classList.add('hidden')
-    })
-    document.getElementById(screenId)!.classList.remove('hidden')
-  }
-
-  private getHighScore(): number {
-    const stored = localStorage.getItem('snake-high-score')
-    return stored ? parseInt(stored, 10) : 0
-  }
-
-  private saveHighScore(score: number) {
-    localStorage.setItem('snake-high-score', score.toString())
-    this.loadHighScore()
-  }
-
-  private loadHighScore() {
-    const highScore = this.getHighScore()
-    document.getElementById('high-score')!.textContent = highScore.toString()
-  }
-
-  private checkGridExpansion() {
-    const totalCells = this.gridSize * this.gridSize
-    const snakeLength = this.snake.length
-    const fillPercentage = snakeLength / totalCells
-
-    if (fillPercentage >= 0.25) {
-      this.expandGrid()
-    }
-  }
-
-  private expandGrid() {
-    this.gridSize *= 2
-    this.level++
-    this.gameSpeed = this.gameSpeed / 2
-    this.updateCanvasSize()
-
-    if (this.gameLoop) clearInterval(this.gameLoop)
-    this.gameLoop = window.setInterval(() => this.update(), this.gameSpeed)
-
-    this.spawnFood()
-  }
-
-  startNewGame() {
-    this.gridSize = this.initialGridSize
-    this.updateCanvasSize()
-    const center = Math.floor(this.gridSize / 2)
-    this.snake = [{ x: center, y: center }]
-    this.direction = 'RIGHT'
-    this.nextDirection = 'RIGHT'
-    this.score = 0
-    this.level = 1
-    this.baseSpeed = 200
-    this.gameSpeed = this.baseSpeed
-    this.isPaused = false
-    this.isGameOver = false
-    this.gameStarted = false
-    this.spawnFood()
-    this.updateUI()
-    this.showScreen('game')
-    document.getElementById('pause')!.classList.add('hidden')
-
-    if (this.gameLoop) clearInterval(this.gameLoop)
-    this.gameLoop = null
-
-    // Draw initial state
-    this.draw()
-  }
-
-  private endGame() {
-    this.isGameOver = true
-    if (this.gameLoop) {
-      clearInterval(this.gameLoop)
-      this.gameLoop = null
-    }
-
-    const highScore = this.getHighScore()
-    if (this.score > highScore) {
-      this.saveHighScore(this.score)
-    }
-
-    document.getElementById('final-score')!.textContent = this.score.toString()
-    document.getElementById('game-over-high-score')!.textContent = Math.max(this.score, highScore).toString()
-    this.showScreen('game-over')
-  }
-
-}
-
-new SnakeGame()
+```

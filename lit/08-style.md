@@ -1,4 +1,10 @@
-/* Generated from lit/*.md — edits here should be synced back to lit files */
+# Styling
+
+The game uses a dark theme with green (#4ade80) as the accent color. The layout centers the content vertically and horizontally. Screens stack as flex columns and are toggled via a `.hidden` class. The pause screen uses a fixed overlay with a dark translucent backdrop.
+
+Buttons use the accent color for borders and text, inverting on hover. The canvas has a subtle green glow via box-shadow. A responsive breakpoint at 768px adjusts font sizes and layout for mobile.
+
+```css {file=src/style.css}
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -129,3 +135,4 @@ button:active {
     padding: 0.8em 1.6em;
   }
 }
+```

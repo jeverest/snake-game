@@ -1,4 +1,17 @@
-<!-- Generated from lit/*.md — edits here should be synced back to lit files -->
+# HTML Page
+
+The page structure is a single `#app` container with four screens:
+
+- **Menu** — shown on load with the high score and a "New Game" button
+- **Game** — the HUD (score, level, grid size), the canvas, and control hints
+- **Game Over** — final score, high score, and a "Play Again" button
+- **Pause** — a fixed overlay that dims the screen
+
+Screens are toggled via the `.hidden` class. The pause screen has an additional `.overlay` class so it layers on top of the game screen rather than replacing it.
+
+The TypeScript entry point is loaded as a module at the end of the body.
+
+```html {file=index.html}
 <!doctype html>
 <html lang="en">
   <head>
@@ -37,3 +50,4 @@
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
+```
