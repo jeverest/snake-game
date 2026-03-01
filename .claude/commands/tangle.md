@@ -1,0 +1,1 @@
+Run `npm run tangle` to regenerate source files from the lit/*.md files. Report what was generated.
