@@ -8,6 +8,7 @@ A classic snake game built with TypeScript and HTML5 Canvas, bundled with Vite.
 - **Adjustable starting grid** - use `+`/`-` keys to change grid resolution (5x5 to 50x50) before the game starts
 - **High score** - persisted in localStorage across sessions
 - **Pause/resume** - press `P` at any time during gameplay
+- **Multiple autoplay bots** - pick a bot profile (Survival, Hunter, Explorer) and switch any time
 - **Dark theme** with a green/red color scheme
 
 ## Coming soon
@@ -20,7 +21,9 @@ A classic snake game built with TypeScript and HTML5 Canvas, bundled with Vite.
 |---|---|
 | Arrow keys / WASD | Move the snake |
 | P | Pause / Resume |
-| Shift+R | Reset to menu |
+| Bot Profile dropdown | Switch active bot behavior |
+| B | Toggle bot autoplay |
+| R | Reset current run |
 | +/- | Adjust grid size (before game starts) |
 
 The game begins when you press a direction key after starting a new game.
