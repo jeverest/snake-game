@@ -1,7 +1,7 @@
 import './style.css'
-
-type Position = { x: number; y: number }
-type Direction = 'UP' | 'DOWN' | 'LEFT' | 'RIGHT'
+import { AVAILABLE_BOTS, DEFAULT_BOT_ID, getBotById } from './bots'
+import type { BotHelpers, BotState, SnakeBot } from './bots/bot-types'
+import { DIRECTIONS, DIRECTION_VECTORS, OPPOSITE_DIRECTIONS, type Direction, type Position } from './game-types'
 
 const ISO_MIN_WIDTH = 300
 const ISO_MAX_WIDTH = 1200
@@ -23,6 +23,10 @@ class SnakeGame {
   private isPaused: boolean = false
   private isGameOver: boolean = false
   private gameStarted: boolean = false
+  private botEnabled: boolean = false
+  private selectedBotId: string = DEFAULT_BOT_ID
+  private activeBot: SnakeBot = getBotById(DEFAULT_BOT_ID) ?? AVAILABLE_BOTS[0]
+  private botSelectors: HTMLSelectElement[] = []
 
   private isoAngle: number = Math.PI / 3 // z-rotation: 30° (45° = standard diamond)
   private perspectiveRatio: number = 0.5  // vertical squash for top-down tilt
@@ -39,12 +43,19 @@ class SnakeGame {
   private isoOriginY: number = 0
   private isoCache: { x: number; y: number }[][] = []
 
+  private autoRotating: boolean = false
+  private autoRotateRafId: number | null = null
+  private autoRotateLastTime: number = 0
+  private autoRotateSpeed: number = 0.15 // radians per second
+  private autoRotatePausedUntil: number = 0 // timestamp when manual override expires
+
   constructor() {
     this.canvas = document.getElementById('canvas') as HTMLCanvasElement
     this.ctx = this.canvas.getContext('2d')!
     this.updateCanvasSize()
     this.loadHighScore()
     this.setupEventListeners()
+    this.updateBotUI()
     window.addEventListener('resize', () => { this.updateCanvasSize(); this.draw() })
   }
 
@@ -289,6 +300,35 @@ class SnakeGame {
     ctx.fill()
   }
 
+  private startAutoRotate() {
+    if (this.autoRotating) return
+    this.autoRotating = true
+    this.autoRotateLastTime = 0
+    this.autoRotateRafId = requestAnimationFrame(t => this.autoRotateStep(t))
+  }
+
+  private stopAutoRotate() {
+    this.autoRotating = false
+    if (this.autoRotateRafId !== null) {
+      cancelAnimationFrame(this.autoRotateRafId)
+      this.autoRotateRafId = null
+    }
+  }
+
+  private autoRotateStep(timestamp: number) {
+    if (!this.autoRotating) return
+
+    if (this.autoRotateLastTime > 0 && timestamp > this.autoRotatePausedUntil) {
+      const dt = (timestamp - this.autoRotateLastTime) / 1000
+      this.isoAngle += this.autoRotateSpeed * dt
+      this.updateCanvasSize()
+      this.draw()
+    }
+
+    this.autoRotateLastTime = timestamp
+    this.autoRotateRafId = requestAnimationFrame(t => this.autoRotateStep(t))
+  }
+
   private draw() {
     const ctx = this.ctx
     ctx.fillStyle = '#1a1a1a'
@@ -334,8 +374,37 @@ class SnakeGame {
 
   private setupEventListeners() {
     document.addEventListener('keydown', this.handleKeyPress.bind(this))
+    this.setupBotSelectors()
     document.getElementById('new-game')!.addEventListener('click', () => this.startNewGame())
+    document.getElementById('start-demo')!.addEventListener('click', () => {
+      this.botEnabled = true
+      this.startNewGame()
+    })
+    document.getElementById('toggle-bot')!.addEventListener('click', () => this.toggleBot())
     document.getElementById('play-again')!.addEventListener('click', () => this.startNewGame())
+  }
+
+  private setupBotSelectors() {
+    const menuSelect = document.getElementById('menu-bot-select') as HTMLSelectElement | null
+    const gameSelect = document.getElementById('game-bot-select') as HTMLSelectElement | null
+    this.botSelectors = [menuSelect, gameSelect].filter((select): select is HTMLSelectElement => select !== null)
+
+    for (const select of this.botSelectors) {
+      select.innerHTML = ''
+      for (const bot of AVAILABLE_BOTS) {
+        const option = document.createElement('option')
+        option.value = bot.id
+        option.textContent = bot.name
+        select.appendChild(option)
+      }
+      select.addEventListener('change', event => {
+        const target = event.target as HTMLSelectElement
+        this.handleBotSelection(target.value)
+      })
+    }
+
+    this.syncBotSelectors()
+    this.updateBotDescriptions()
   }
 
   private handleKeyPress(e: KeyboardEvent) {
@@ -346,7 +415,7 @@ class SnakeGame {
       }
     }
 
-    if (e.key === 'R') {
+    if (e.key === 'r' || e.key === 'R') {
       this.startNewGame()
       return
     }
@@ -355,6 +424,11 @@ class SnakeGame {
       if (!this.isGameOver && this.gameLoop !== null) {
         this.togglePause()
       }
+      return
+    }
+
+    if (e.key === 'b' || e.key === 'B') {
+      this.toggleBot()
       return
     }
 
@@ -378,6 +452,7 @@ class SnakeGame {
 
     if (e.key === 'q' || e.key === 'Q') {
       this.isoAngle -= Math.PI / 36  // rotate clockwise by 5°
+      this.autoRotatePausedUntil = performance.now() + 3000
       this.updateCanvasSize()
       this.draw()
       return
@@ -385,6 +460,7 @@ class SnakeGame {
 
     if (e.key === 'e' || e.key === 'E') {
       this.isoAngle += Math.PI / 36  // rotate counter-clockwise by 5°
+      this.autoRotatePausedUntil = performance.now() + 3000
       this.updateCanvasSize()
       this.draw()
       return
@@ -423,6 +499,8 @@ class SnakeGame {
 
     const newDirection = keyMap[e.key]
     if (newDirection) {
+      if (this.botEnabled) return
+
       if (this.isValidDirection(newDirection)) {
         this.nextDirection = newDirection
 
@@ -436,13 +514,7 @@ class SnakeGame {
   }
 
   private isValidDirection(newDirection: Direction): boolean {
-    const opposites: Record<Direction, Direction> = {
-      'UP': 'DOWN',
-      'DOWN': 'UP',
-      'LEFT': 'RIGHT',
-      'RIGHT': 'LEFT'
-    }
-    return opposites[this.direction] !== newDirection
+    return OPPOSITE_DIRECTIONS[this.direction] !== newDirection
   }
 
   private togglePause() {
@@ -453,6 +525,69 @@ class SnakeGame {
     } else {
       pauseScreen.classList.add('hidden')
     }
+  }
+
+  private toggleBot() {
+    this.botEnabled = !this.botEnabled
+    this.updateBotUI()
+
+    if (this.botEnabled) {
+      this.startAutoRotate()
+    } else {
+      this.stopAutoRotate()
+    }
+
+    const gameScreenVisible = !document.getElementById('game')!.classList.contains('hidden')
+    if (this.botEnabled && gameScreenVisible && this.snake.length > 0 && !this.isGameOver && !this.isPaused) {
+      this.startLoopIfNeeded()
+    }
+  }
+
+  private handleBotSelection(botId: string) {
+    const selected = getBotById(botId)
+    if (!selected) return
+
+    this.selectedBotId = selected.id
+    this.activeBot = selected
+    this.syncBotSelectors()
+    this.updateBotDescriptions()
+    this.updateBotUI()
+  }
+
+  private syncBotSelectors() {
+    for (const select of this.botSelectors) {
+      select.value = this.selectedBotId
+    }
+  }
+
+  private updateBotDescriptions() {
+    const menuDescription = document.getElementById('menu-bot-description')
+    const gameDescription = document.getElementById('game-bot-description')
+    if (menuDescription) {
+      menuDescription.textContent = this.activeBot.description
+    }
+    if (gameDescription) {
+      gameDescription.textContent = this.activeBot.description
+    }
+  }
+
+  private updateBotUI() {
+    const status = document.getElementById('bot-status')
+    const toggle = document.getElementById('toggle-bot')
+    const demoButton = document.getElementById('start-demo')
+    if (!status || !toggle || !demoButton) return
+
+    status.textContent = this.botEnabled ? `ON (${this.activeBot.name})` : `OFF (${this.activeBot.name})`
+    status.classList.toggle('on', this.botEnabled)
+    status.classList.toggle('off', !this.botEnabled)
+    toggle.textContent = this.botEnabled ? `Disable Bot (B)` : `Enable Bot (B)`
+    demoButton.textContent = this.botEnabled ? `Demo Bot Enabled (${this.activeBot.name})` : `Start Demo Bot (${this.activeBot.name})`
+  }
+
+  private startLoopIfNeeded() {
+    if (this.gameLoop !== null) return
+    this.gameStarted = true
+    this.gameLoop = window.setInterval(() => this.update(), this.gameSpeed)
   }
 
   startNewGame() {
@@ -477,12 +612,28 @@ class SnakeGame {
     if (this.gameLoop) clearInterval(this.gameLoop)
     this.gameLoop = null
 
+    this.updateBotUI()
+
+    if (this.botEnabled) {
+      this.startLoopIfNeeded()
+      this.startAutoRotate()
+    } else {
+      this.stopAutoRotate()
+    }
+
     // Draw initial state
     this.draw()
   }
 
   private update() {
     if (this.isPaused || this.isGameOver) return
+
+    if (this.botEnabled) {
+      const botDirection = this.chooseBotDirection()
+      if (botDirection) {
+        this.nextDirection = botDirection
+      }
+    }
 
     this.direction = this.nextDirection
     const head = { ...this.snake[0] }
@@ -513,11 +664,148 @@ class SnakeGame {
     this.updateUI()
   }
 
-  private checkCollision(head: Position): boolean {
-    if (head.x < 0 || head.x >= this.gridSize || head.y < 0 || head.y >= this.gridSize) {
+  private chooseBotDirection(): Direction | null {
+    const botState: BotState = {
+      snake: this.snake,
+      food: this.food,
+      gridSize: this.gridSize,
+      direction: this.direction
+    }
+
+    const botHelpers: BotHelpers = {
+      simulateMove: (snake, direction, food) => this.simulateMove(snake, direction, food),
+      countReachableArea: (start, snake) => this.countReachableArea(start, snake),
+      hasPath: (start, target, snake, allowTargetOccupied) =>
+        this.hasPath(start, target, snake, allowTargetOccupied),
+      findShortestPathLength: (start, target, snake, allowTargetOccupied) =>
+        this.findShortestPathLength(start, target, snake, allowTargetOccupied),
+      getCandidateDirections: currentDirection => this.getCandidateDirections(currentDirection)
+    }
+
+    const direction = this.activeBot.chooseDirection(botState, botHelpers)
+    if (!direction || !this.isValidDirection(direction)) {
+      return null
+    }
+    return this.simulateMove(this.snake, direction, this.food) ? direction : null
+  }
+
+  private simulateMove(snake: Position[], direction: Direction, food: Position): Position[] | null {
+    const nextHead = this.getMovedPosition(snake[0], direction)
+    if (this.wouldCollide(nextHead, snake)) {
+      return null
+    }
+
+    const nextSnake = [nextHead, ...snake]
+    const ateFood = nextHead.x === food.x && nextHead.y === food.y
+    if (!ateFood) {
+      nextSnake.pop()
+    }
+    return nextSnake
+  }
+
+  private getMovedPosition(position: Position, direction: Direction): Position {
+    const vector = DIRECTION_VECTORS[direction]
+    return {
+      x: position.x + vector.x,
+      y: position.y + vector.y
+    }
+  }
+
+  private inBounds(position: Position): boolean {
+    return position.x >= 0 && position.x < this.gridSize && position.y >= 0 && position.y < this.gridSize
+  }
+
+  private positionToKey(position: Position): string {
+    return `${position.x},${position.y}`
+  }
+
+  private wouldCollide(head: Position, snake: Position[]): boolean {
+    if (!this.inBounds(head)) {
       return true
     }
-    return this.snake.some(segment => segment.x === head.x && segment.y === head.y)
+    return snake.some(segment => segment.x === head.x && segment.y === head.y)
+  }
+
+  private getCandidateDirections(currentDirection: Direction): Direction[] {
+    return DIRECTIONS.filter(direction => OPPOSITE_DIRECTIONS[currentDirection] !== direction)
+  }
+
+  private hasPath(start: Position, target: Position, snake: Position[], allowTargetOccupied: boolean): boolean {
+    return this.findShortestPathLength(start, target, snake, allowTargetOccupied) !== null
+  }
+
+  private findShortestPathLength(
+    start: Position,
+    target: Position,
+    snake: Position[],
+    allowTargetOccupied: boolean
+  ): number | null {
+    const startKey = this.positionToKey(start)
+    const targetKey = this.positionToKey(target)
+    const blocked = new Set<string>()
+
+    for (const segment of snake) {
+      const key = this.positionToKey(segment)
+      if (key === startKey) continue
+      if (allowTargetOccupied && key === targetKey) continue
+      blocked.add(key)
+    }
+
+    const queue: Array<{ position: Position; distance: number }> = [{ position: start, distance: 0 }]
+    const visited = new Set<string>([startKey])
+
+    while (queue.length > 0) {
+      const current = queue.shift()!
+      const currentKey = this.positionToKey(current.position)
+      if (currentKey === targetKey) {
+        return current.distance
+      }
+
+      for (const direction of DIRECTIONS) {
+        const next = this.getMovedPosition(current.position, direction)
+        const nextKey = this.positionToKey(next)
+        if (!this.inBounds(next) || blocked.has(nextKey) || visited.has(nextKey)) {
+          continue
+        }
+        visited.add(nextKey)
+        queue.push({ position: next, distance: current.distance + 1 })
+      }
+    }
+
+    return null
+  }
+
+  private countReachableArea(start: Position, snake: Position[]): number {
+    const startKey = this.positionToKey(start)
+    const blocked = new Set<string>()
+    for (const segment of snake) {
+      const key = this.positionToKey(segment)
+      if (key !== startKey) {
+        blocked.add(key)
+      }
+    }
+
+    const queue: Position[] = [start]
+    const visited = new Set<string>([startKey])
+
+    while (queue.length > 0) {
+      const current = queue.shift()!
+      for (const direction of DIRECTIONS) {
+        const next = this.getMovedPosition(current, direction)
+        const nextKey = this.positionToKey(next)
+        if (!this.inBounds(next) || blocked.has(nextKey) || visited.has(nextKey)) {
+          continue
+        }
+        visited.add(nextKey)
+        queue.push(next)
+      }
+    }
+
+    return visited.size
+  }
+
+  private checkCollision(head: Position): boolean {
+    return this.wouldCollide(head, this.snake)
   }
 
   private checkGridExpansion() {
@@ -561,6 +849,7 @@ class SnakeGame {
 
   private endGame() {
     this.isGameOver = true
+    this.stopAutoRotate()
     if (this.gameLoop) {
       clearInterval(this.gameLoop)
       this.gameLoop = null

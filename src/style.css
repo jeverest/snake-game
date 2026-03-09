@@ -64,6 +64,37 @@ h1 {
   font-weight: 600;
 }
 
+.bot-selection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.bot-selection label {
+  color: #cbd5e1;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.bot-selection select {
+  min-width: 240px;
+  border-radius: 8px;
+  border: 1px solid #475569;
+  background-color: #0f172a;
+  color: #f1f5f9;
+  font-size: 1rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.bot-description {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  max-width: 480px;
+}
+
 button {
   border-radius: 8px;
   border: 2px solid #4ade80;
@@ -89,6 +120,16 @@ button:active {
   transform: scale(0.98);
 }
 
+.secondary-button {
+  border-color: #64748b;
+  color: #cbd5e1;
+}
+
+.secondary-button:hover {
+  background-color: #64748b;
+  color: #0f172a;
+}
+
 #canvas {
   border: 3px solid #333;
   box-shadow: 0 0 20px rgba(74, 222, 128, 0.2);
@@ -107,6 +148,14 @@ button:active {
   color: #4ade80;
 }
 
+#bot-status.off {
+  color: #f87171;
+}
+
+#bot-status.on {
+  color: #4ade80;
+}
+
 .controls {
   color: #888;
   font-size: 0.9em;
@@ -121,6 +170,12 @@ button:active {
   .game-info {
     flex-direction: column;
     gap: 0.5rem;
+  }
+
+  .bot-selection select {
+    min-width: 200px;
+    width: 100%;
+    max-width: 320px;
   }
 
   button {
