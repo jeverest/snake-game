@@ -10,9 +10,8 @@ function scoreDirection(state: BotState, helpers: BotHelpers, direction: Directi
   const nextHead = simulatedSnake[0]
   const ateFood = nextHead.x === state.food.x && nextHead.y === state.food.y
   const tail = simulatedSnake[simulatedSnake.length - 1]
-  const canReachTail = helpers.hasPath(nextHead, tail, simulatedSnake, true)
-  const reachableArea = helpers.countReachableArea(nextHead, simulatedSnake)
-  const pathToFood = ateFood ? 0 : helpers.findShortestPathLength(nextHead, state.food, simulatedSnake, true)
+
+  const analysis = helpers.analyzePosition(nextHead, simulatedSnake, { tail, food: state.food })
   const marginToWall = Math.min(
     nextHead.x,
     nextHead.y,
@@ -21,11 +20,11 @@ function scoreDirection(state: BotState, helpers: BotHelpers, direction: Directi
   )
 
   let score = 0
-  score += reachableArea * 35
+  score += analysis.reachableArea * 35
   score += marginToWall * 120
-  score += canReachTail ? 90000 : -100000
+  score += analysis.canReachTail ? 90000 : -100000
   score += ateFood ? 8000 : 0
-  score += pathToFood !== null ? 2500 - pathToFood * 8 : -1500
+  score += analysis.pathToFood !== null ? 2500 - analysis.pathToFood * 8 : -1500
   return score
 }
 

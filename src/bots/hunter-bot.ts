@@ -10,17 +10,16 @@ function scoreDirection(state: BotState, helpers: BotHelpers, direction: Directi
   const nextHead = simulatedSnake[0]
   const ateFood = nextHead.x === state.food.x && nextHead.y === state.food.y
   const tail = simulatedSnake[simulatedSnake.length - 1]
-  const canReachTail = helpers.hasPath(nextHead, tail, simulatedSnake, true)
-  const pathToFood = ateFood ? 0 : helpers.findShortestPathLength(nextHead, state.food, simulatedSnake, true)
-  const reachableArea = helpers.countReachableArea(nextHead, simulatedSnake)
+
+  const analysis = helpers.analyzePosition(nextHead, simulatedSnake, { tail, food: state.food })
   const distanceToFood = Math.abs(nextHead.x - state.food.x) + Math.abs(nextHead.y - state.food.y)
 
   let score = 0
   score += ateFood ? 20000 : 0
-  score += pathToFood !== null ? 9000 - pathToFood * 50 : -6000
+  score += analysis.pathToFood !== null ? 9000 - analysis.pathToFood * 50 : -6000
   score -= distanceToFood * 12
-  score += reachableArea * 8
-  score += canReachTail ? 3000 : -100000
+  score += analysis.reachableArea * 8
+  score += analysis.canReachTail ? 3000 : -100000
   if (direction === state.direction) {
     score += 5
   }

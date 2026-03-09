@@ -7,16 +7,19 @@ export type BotState = {
   direction: Direction
 }
 
+export type AnalysisResult = {
+  reachableArea: number
+  canReachTail: boolean
+  pathToFood: number | null
+}
+
 export type BotHelpers = {
   simulateMove: (snake: Position[], direction: Direction, food: Position) => Position[] | null
-  countReachableArea: (start: Position, snake: Position[]) => number
-  hasPath: (start: Position, target: Position, snake: Position[], allowTargetOccupied: boolean) => boolean
-  findShortestPathLength: (
+  analyzePosition: (
     start: Position,
-    target: Position,
     snake: Position[],
-    allowTargetOccupied: boolean
-  ) => number | null
+    targets: { tail: Position; food: Position }
+  ) => AnalysisResult
   getCandidateDirections: (currentDirection: Direction) => Direction[]
 }
 

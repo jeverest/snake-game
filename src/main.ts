@@ -10,6 +10,7 @@ class SnakeGame {
   private canvas: HTMLCanvasElement
   private ctx: CanvasRenderingContext2D
   private snake: Position[] = []
+  private snakeSet: Set<string> = new Set()
   private food: Position = { x: 0, y: 0 }
   private direction: Direction = 'RIGHT'
   private nextDirection: Direction = 'RIGHT'
@@ -444,6 +445,7 @@ class SnakeGame {
       this.updateCanvasSize()
       const center = Math.floor(this.gridSize / 2)
       this.snake = [{ x: center, y: center }]
+      this.snakeSet = new Set([`${center},${center}`])
       this.spawnFood()
       this.updateUI()
       this.draw()
@@ -595,6 +597,7 @@ class SnakeGame {
     this.updateCanvasSize()
     const center = Math.floor(this.gridSize / 2)
     this.snake = [{ x: center, y: center }]
+    this.snakeSet = new Set([`${center},${center}`])
     this.direction = 'RIGHT'
     this.nextDirection = 'RIGHT'
     this.score = 0
@@ -651,13 +654,15 @@ class SnakeGame {
     }
 
     this.snake.unshift(head)
+    this.snakeSet.add(`${head.x},${head.y}`)
 
     if (head.x === this.food.x && head.y === this.food.y) {
       this.score++
       this.spawnFood()
       this.checkGridExpansion()
     } else {
-      this.snake.pop()
+      const tail = this.snake.pop()!
+      this.snakeSet.delete(`${tail.x},${tail.y}`)
     }
 
     this.draw()
@@ -674,11 +679,8 @@ class SnakeGame {
 
     const botHelpers: BotHelpers = {
       simulateMove: (snake, direction, food) => this.simulateMove(snake, direction, food),
-      countReachableArea: (start, snake) => this.countReachableArea(start, snake),
-      hasPath: (start, target, snake, allowTargetOccupied) =>
-        this.hasPath(start, target, snake, allowTargetOccupied),
-      findShortestPathLength: (start, target, snake, allowTargetOccupied) =>
-        this.findShortestPathLength(start, target, snake, allowTargetOccupied),
+      analyzePosition: (start, snake, targets) =>
+        this.analyzePosition(start, snake, targets),
       getCandidateDirections: currentDirection => this.getCandidateDirections(currentDirection)
     }
 
@@ -703,6 +705,7 @@ class SnakeGame {
     return nextSnake
   }
 
+
   private getMovedPosition(position: Position, direction: Direction): Position {
     const vector = DIRECTION_VECTORS[direction]
     return {
@@ -719,9 +722,12 @@ class SnakeGame {
     return `${position.x},${position.y}`
   }
 
-  private wouldCollide(head: Position, snake: Position[]): boolean {
+  private wouldCollide(head: Position, snake: Position[], blockedSet?: Set<string>): boolean {
     if (!this.inBounds(head)) {
       return true
+    }
+    if (blockedSet) {
+      return blockedSet.has(`${head.x},${head.y}`)
     }
     return snake.some(segment => segment.x === head.x && segment.y === head.y)
   }
@@ -730,35 +736,46 @@ class SnakeGame {
     return DIRECTIONS.filter(direction => OPPOSITE_DIRECTIONS[currentDirection] !== direction)
   }
 
-  private hasPath(start: Position, target: Position, snake: Position[], allowTargetOccupied: boolean): boolean {
-    return this.findShortestPathLength(start, target, snake, allowTargetOccupied) !== null
-  }
-
-  private findShortestPathLength(
+  private analyzePosition(
     start: Position,
-    target: Position,
     snake: Position[],
-    allowTargetOccupied: boolean
-  ): number | null {
+    targets: { tail: Position; food: Position }
+  ): { reachableArea: number; canReachTail: boolean; pathToFood: number | null } {
     const startKey = this.positionToKey(start)
-    const targetKey = this.positionToKey(target)
-    const blocked = new Set<string>()
+    const tailKey = this.positionToKey(targets.tail)
+    const foodKey = this.positionToKey(targets.food)
 
+    // Blocked set matches original countReachableArea: snake minus start.
+    // Tail IS blocked (like the original). We detect tail reachability by
+    // checking adjacency — if any visited cell neighbors the tail, it's reachable.
+    const blocked = new Set<string>()
     for (const segment of snake) {
       const key = this.positionToKey(segment)
       if (key === startKey) continue
-      if (allowTargetOccupied && key === targetKey) continue
       blocked.add(key)
     }
 
     const queue: Array<{ position: Position; distance: number }> = [{ position: start, distance: 0 }]
     const visited = new Set<string>([startKey])
+    let head = 0
+    let canReachTail = false
+    let pathToFood: number | null = null
 
-    while (queue.length > 0) {
-      const current = queue.shift()!
+    while (head < queue.length) {
+      const current = queue[head++]
       const currentKey = this.positionToKey(current.position)
-      if (currentKey === targetKey) {
-        return current.distance
+
+      if (currentKey === foodKey) pathToFood = current.distance
+
+      // Check if current cell is adjacent to tail (tail is blocked, so check neighbors)
+      if (!canReachTail) {
+        for (const direction of DIRECTIONS) {
+          const adj = this.getMovedPosition(current.position, direction)
+          if (this.positionToKey(adj) === tailKey) {
+            canReachTail = true
+            break
+          }
+        }
       }
 
       for (const direction of DIRECTIONS) {
@@ -772,40 +789,11 @@ class SnakeGame {
       }
     }
 
-    return null
-  }
-
-  private countReachableArea(start: Position, snake: Position[]): number {
-    const startKey = this.positionToKey(start)
-    const blocked = new Set<string>()
-    for (const segment of snake) {
-      const key = this.positionToKey(segment)
-      if (key !== startKey) {
-        blocked.add(key)
-      }
-    }
-
-    const queue: Position[] = [start]
-    const visited = new Set<string>([startKey])
-
-    while (queue.length > 0) {
-      const current = queue.shift()!
-      for (const direction of DIRECTIONS) {
-        const next = this.getMovedPosition(current, direction)
-        const nextKey = this.positionToKey(next)
-        if (!this.inBounds(next) || blocked.has(nextKey) || visited.has(nextKey)) {
-          continue
-        }
-        visited.add(nextKey)
-        queue.push(next)
-      }
-    }
-
-    return visited.size
+    return { reachableArea: visited.size, canReachTail, pathToFood }
   }
 
   private checkCollision(head: Position): boolean {
-    return this.wouldCollide(head, this.snake)
+    return this.wouldCollide(head, this.snake, this.snakeSet)
   }
 
   private checkGridExpansion() {
@@ -831,13 +819,30 @@ class SnakeGame {
   }
 
   private spawnFood() {
+    const totalCells = this.gridSize * this.gridSize
+    if (this.snake.length > totalCells * 0.5) {
+      // At high fill ratios, collect empty cells directly
+      const emptyCells: Position[] = []
+      for (let y = 0; y < this.gridSize; y++) {
+        for (let x = 0; x < this.gridSize; x++) {
+          if (!this.snakeSet.has(`${x},${y}`)) {
+            emptyCells.push({ x, y })
+          }
+        }
+      }
+      if (emptyCells.length > 0) {
+        this.food = emptyCells[Math.floor(Math.random() * emptyCells.length)]
+        return
+      }
+    }
+
     let newFood: Position
     do {
       newFood = {
         x: Math.floor(Math.random() * this.gridSize),
         y: Math.floor(Math.random() * this.gridSize)
       }
-    } while (this.snake.some(segment => segment.x === newFood.x && segment.y === newFood.y))
+    } while (this.snakeSet.has(`${newFood.x},${newFood.y}`))
     this.food = newFood
   }
 
