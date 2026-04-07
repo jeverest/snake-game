@@ -30,7 +30,8 @@ function scoreDirection(state: BotState, helpers: BotHelpers, direction: Directi
     state.gridSize - 1 - state.food.x,
     state.gridSize - 1 - state.food.y
   )
-  const foodNearWall = foodDistToEdge <= 2
+  const edgeZone = Math.floor(state.gridSize * 0.2)
+  const foodNearWall = foodDistToEdge <= edgeZone
 
   let score = 0
   score += analysis.reachableArea * 18
