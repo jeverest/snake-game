@@ -9,9 +9,10 @@ import { spiralBot } from './spiral-bot'
 import { survivalBot } from './survival-bot'
 import { nomadBot } from './nomad-bot'
 import { zigzagBot } from './zigzag-bot'
+import { sweeperBot } from './sweeper-bot'
 
 
-export const AVAILABLE_BOTS: SnakeBot[] = [survivalBot, hunterBot, explorerBot, coilerBot, edgeRunnerBot, ambusherBot, chaserBot, nomadBot, spiralBot, zigzagBot]
+export const AVAILABLE_BOTS: SnakeBot[] = [survivalBot, hunterBot, explorerBot, coilerBot, edgeRunnerBot, ambusherBot, chaserBot, nomadBot, spiralBot, zigzagBot, sweeperBot]
 
 export const DEFAULT_BOT_ID = survivalBot.id
 
