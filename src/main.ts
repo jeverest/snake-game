@@ -71,6 +71,9 @@ class SnakeGame {
 
   // Bot state (P1 / single player)
   private botEnabled: boolean = false
+  // True if the bot was active at any point in the current single-player run.
+  // Disqualifies the run from prompting for a leaderboard name.
+  private botEverActive: boolean = false
   private selectedBotId: string = DEFAULT_BOT_ID
   private activeBot: SnakeBot = getBotById(DEFAULT_BOT_ID) ?? AVAILABLE_BOTS[0]
   private botSelectors: HTMLSelectElement[] = []
@@ -719,6 +722,7 @@ class SnakeGame {
 
   private toggleBot() {
     this.botEnabled = !this.botEnabled
+    if (this.botEnabled) this.botEverActive = true
     this.updateBotUI()
 
     if (this.botEnabled) {
@@ -809,6 +813,7 @@ class SnakeGame {
     if (this.isTwoSnakeMode()) {
       this.botEnabled = false
     }
+    this.botEverActive = this.botEnabled
 
     this.gridSize = this.initialGridSize
     this.updateCanvasSize()
@@ -1321,8 +1326,8 @@ class SnakeGame {
       { label: 'Time', value: formatDuration(survivalSeconds) }
     ])
 
-    if (this.botEnabled) {
-      // Bot demos don't post to the human leaderboard.
+    if (this.botEverActive) {
+      // Any bot involvement disqualifies the run from the human leaderboard.
       this.clearLeaderboardPrompt()
     } else {
       this.maybePromptForEntry('single', {
