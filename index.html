@@ -28,6 +28,20 @@
           <button id="two-player">Two Player</button>
           <button id="bot-vs-bot" class="secondary-button">Bot vs Bot</button>
           <button id="start-demo" class="secondary-button">Start Demo Bot</button>
+          <button id="open-leaderboards" class="secondary-button">Leaderboards</button>
+        </div>
+      </div>
+      <div id="leaderboards" class="screen hidden">
+        <h1>Leaderboards</h1>
+        <div class="leaderboard-tabs" id="leaderboard-tabs">
+          <button class="lb-tab" data-mode="single">Single Player</button>
+          <button class="lb-tab" data-mode="pvp">Two Player</button>
+          <button class="lb-tab" data-mode="bvb">Bot vs Bot</button>
+        </div>
+        <div id="leaderboard-table-wrap"></div>
+        <div class="leaderboard-actions">
+          <button id="clear-leaderboard" class="secondary-button">Clear This Board</button>
+          <button id="leaderboards-back" class="secondary-button">Back</button>
         </div>
       </div>
       <div id="game" class="screen hidden">
@@ -57,7 +71,18 @@
           <div class="final-score">P2 Score: <span id="final-p2-score" class="p2-color">0</span></div>
         </div>
         <div class="high-score" id="high-score-display">High Score: <span id="game-over-high-score">0</span></div>
+        <div id="game-over-stats" class="game-over-stats"></div>
+        <div id="leaderboard-prompt" class="leaderboard-prompt hidden">
+          <div class="leaderboard-prompt-title">New Leaderboard Entry!</div>
+          <div id="leaderboard-prompt-rank" class="leaderboard-prompt-rank"></div>
+          <form id="leaderboard-name-form" class="leaderboard-name-form">
+            <input id="leaderboard-name-input" type="text" maxlength="16" placeholder="Enter your name" autocomplete="off" />
+            <button type="submit">Save</button>
+          </form>
+        </div>
+        <div id="leaderboard-confirmation" class="leaderboard-confirmation hidden"></div>
         <button id="play-again">Play Again</button>
+        <button id="view-leaderboard" class="secondary-button">View Leaderboard</button>
         <button id="back-to-menu" class="secondary-button">Menu</button>
       </div>
       <div id="pause" class="screen hidden overlay">

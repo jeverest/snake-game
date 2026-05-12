@@ -204,6 +204,154 @@ button:active {
   display: none;
 }
 
+.leaderboard-tabs {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.lb-tab {
+  border-color: #475569;
+  color: #cbd5e1;
+  padding: 0.6em 1.2em;
+  font-size: 0.95em;
+}
+
+.lb-tab.active {
+  border-color: #4ade80;
+  color: #4ade80;
+  background-color: rgba(74, 222, 128, 0.1);
+}
+
+#leaderboard-table-wrap {
+  width: 100%;
+  max-width: 720px;
+  overflow-x: auto;
+}
+
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: #e5e5e5;
+  font-size: 0.95rem;
+}
+
+.leaderboard-table th,
+.leaderboard-table td {
+  padding: 0.6rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.leaderboard-table th {
+  color: #94a3b8;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.leaderboard-table td.rank {
+  color: #fbbf24;
+  font-weight: 700;
+  width: 3rem;
+}
+
+.leaderboard-table td.score {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.leaderboard-table td.result-win {
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.leaderboard-table td.result-loss {
+  color: #f87171;
+}
+
+.leaderboard-table td.result-draw {
+  color: #cbd5e1;
+}
+
+.leaderboard-empty {
+  color: #94a3b8;
+  font-style: italic;
+  padding: 2rem 0;
+}
+
+.leaderboard-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.game-over-stats {
+  color: #cbd5e1;
+  font-size: 0.95rem;
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.game-over-stats .stat-label {
+  color: #94a3b8;
+  margin-right: 0.35rem;
+}
+
+.leaderboard-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid #4ade80;
+  border-radius: 10px;
+  background-color: rgba(74, 222, 128, 0.07);
+}
+
+.leaderboard-prompt-title {
+  color: #4ade80;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.leaderboard-prompt-rank {
+  color: #fbbf24;
+  font-weight: 600;
+}
+
+.leaderboard-name-form {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.leaderboard-name-form input {
+  border-radius: 8px;
+  border: 1px solid #475569;
+  background-color: #0f172a;
+  color: #f1f5f9;
+  font-size: 1rem;
+  padding: 0.6rem 0.75rem;
+  min-width: 200px;
+}
+
+.leaderboard-name-form button {
+  padding: 0.6em 1.2em;
+  font-size: 0.95em;
+}
+
+.leaderboard-confirmation {
+  color: #4ade80;
+  font-weight: 600;
+}
+
 @media (max-width: 768px) {
   h1 {
     font-size: 2em;

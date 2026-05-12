@@ -2,11 +2,39 @@ import './style.css'
 import { AVAILABLE_BOTS, DEFAULT_BOT_ID, getBotById } from './bots'
 import type { BotHelpers, BotState, SnakeBot } from './bots/bot-types'
 import { DIRECTIONS, DIRECTION_VECTORS, OPPOSITE_DIRECTIONS, type Direction, type Position } from './game-types'
+import {
+  addEntry,
+  getLeaderboard,
+  clearLeaderboard,
+  qualifies,
+  sanitizeName,
+  MODE_LABELS
+} from './leaderboard'
+import type { LeaderboardEntry, LeaderboardMode, GameResult } from './leaderboard'
 
 type GameMode = 'single' | 'pvp' | 'bvb'
 
 const ISO_MIN_WIDTH = 300
 const ISO_MAX_WIDTH = 1200
+
+function formatDuration(seconds: number): string {
+  const total = Math.max(0, Math.floor(seconds))
+  const m = Math.floor(total / 60)
+  const s = total % 60
+  return m > 0 ? `${m}m ${s.toString().padStart(2, '0')}s` : `${s}s`
+}
+
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>"']/g, ch => {
+    switch (ch) {
+      case '&': return '&amp;'
+      case '<': return '&lt;'
+      case '>': return '&gt;'
+      case '"': return '&quot;'
+      default: return '&#39;'
+    }
+  })
+}
 
 class SnakeGame {
   private canvas: HTMLCanvasElement
@@ -67,6 +95,15 @@ class SnakeGame {
   private isoOriginX: number = 0
   private isoOriginY: number = 0
   private isoCache: { x: number; y: number }[][] = []
+
+  // Stats tracking (for leaderboards)
+  private gameStartTime: number = 0
+  private maxLength1: number = 1
+  private maxLength2: number = 1
+
+  // Leaderboard UI
+  private leaderboardActiveMode: LeaderboardMode = 'single'
+  private pendingEntry: { mode: LeaderboardMode; entry: LeaderboardEntry } | null = null
 
   // Auto-rotation
   private autoRotating: boolean = false
@@ -443,6 +480,32 @@ class SnakeGame {
       this.updateBotUI()
       this.showScreen('menu')
     })
+
+    document.getElementById('open-leaderboards')!.addEventListener('click', () => {
+      this.openLeaderboards(this.leaderboardActiveMode)
+    })
+    document.getElementById('leaderboards-back')!.addEventListener('click', () => {
+      this.showScreen('menu')
+    })
+    document.getElementById('clear-leaderboard')!.addEventListener('click', () => {
+      if (confirm(`Clear the ${MODE_LABELS[this.leaderboardActiveMode]} leaderboard?`)) {
+        clearLeaderboard(this.leaderboardActiveMode)
+        this.renderLeaderboardTable(this.leaderboardActiveMode)
+      }
+    })
+    for (const tab of document.querySelectorAll<HTMLButtonElement>('.lb-tab')) {
+      tab.addEventListener('click', () => {
+        const mode = tab.dataset.mode as LeaderboardMode | undefined
+        if (mode) this.openLeaderboards(mode)
+      })
+    }
+    document.getElementById('view-leaderboard')!.addEventListener('click', () => {
+      this.openLeaderboards(this.gameMode)
+    })
+    document.getElementById('leaderboard-name-form')!.addEventListener('submit', e => {
+      e.preventDefault()
+      this.submitPendingEntry()
+    })
   }
 
   private setupBotSelectors() {
@@ -488,6 +551,11 @@ class SnakeGame {
   }
 
   private handleKeyPress(e: KeyboardEvent) {
+    const target = e.target as HTMLElement | null
+    if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT')) {
+      return
+    }
+
     if (e.key === 'Enter') {
       if (!this.gameStarted || this.isGameOver) {
         this.startNewGame()
@@ -627,6 +695,7 @@ class SnakeGame {
           // Start the game on first directional input
           if (!this.gameStarted) {
             this.gameStarted = true
+            this.gameStartTime = performance.now()
             this.gameLoop = window.setInterval(() => this.update(), this.gameSpeed)
           }
         }
@@ -729,6 +798,7 @@ class SnakeGame {
   private startLoopIfNeeded() {
     if (this.gameLoop !== null) return
     this.gameStarted = true
+    if (this.gameStartTime === 0) this.gameStartTime = performance.now()
     this.gameLoop = window.setInterval(() => this.update(), this.gameSpeed)
   }
 
@@ -779,6 +849,10 @@ class SnakeGame {
     this.isPaused = false
     this.isGameOver = false
     this.gameStarted = false
+    this.gameStartTime = 0
+    this.maxLength1 = this.snake.length
+    this.maxLength2 = this.snake2.length
+    this.pendingEntry = null
     this.spawnFood()
     this.updateUI()
     this.showScreen('game')
@@ -849,6 +923,8 @@ class SnakeGame {
       const tail = this.snake.pop()!
       this.snakeSet.delete(`${tail.x},${tail.y}`)
     }
+
+    if (this.snake.length > this.maxLength1) this.maxLength1 = this.snake.length
 
     this.draw()
     this.updateUI()
@@ -923,6 +999,9 @@ class SnakeGame {
       const tail = this.snake2.pop()!
       this.snakeSet2.delete(`${tail.x},${tail.y}`)
     }
+
+    if (this.snake.length > this.maxLength1) this.maxLength1 = this.snake.length
+    if (this.snake2.length > this.maxLength2) this.maxLength2 = this.snake2.length
 
     this.draw()
     this.updateUI()
@@ -1235,6 +1314,26 @@ class SnakeGame {
     document.getElementById('game-over-high-score')!.textContent = Math.max(this.score, highScore).toString()
     document.getElementById('two-player-final-scores')!.classList.add('hidden')
     document.getElementById('high-score-display')!.classList.remove('hidden')
+
+    const survivalSeconds = this.survivalSeconds()
+    this.renderGameOverStats([
+      { label: 'Longest', value: this.maxLength1.toString() },
+      { label: 'Time', value: formatDuration(survivalSeconds) }
+    ])
+
+    if (this.botEnabled) {
+      // Bot demos don't post to the human leaderboard.
+      this.clearLeaderboardPrompt()
+    } else {
+      this.maybePromptForEntry('single', {
+        name: '',
+        score: this.score,
+        longestSnake: this.maxLength1,
+        survivalSeconds,
+        timestamp: Date.now()
+      })
+    }
+
     this.showScreen('game-over')
   }
 
@@ -1247,12 +1346,20 @@ class SnakeGame {
     }
 
     let winnerText: string
+    let p1Result: GameResult
+    let p2Result: GameResult
     if (p1Dead && p2Dead) {
       winnerText = 'Draw!'
+      p1Result = 'draw'
+      p2Result = 'draw'
     } else if (p1Dead) {
       winnerText = 'Player 2 Wins!'
+      p1Result = 'loss'
+      p2Result = 'win'
     } else {
       winnerText = 'Player 1 Wins!'
+      p1Result = 'win'
+      p2Result = 'loss'
     }
 
     document.getElementById('game-over-title')!.textContent = 'Game Over!'
@@ -1265,7 +1372,174 @@ class SnakeGame {
     document.getElementById('final-p1-score')!.textContent = this.score.toString()
     document.getElementById('final-p2-score')!.textContent = this.score2.toString()
     document.getElementById('high-score-display')!.classList.add('hidden')
+
+    const survivalSeconds = this.survivalSeconds()
+    this.renderGameOverStats([
+      { label: 'P1 longest', value: this.maxLength1.toString() },
+      { label: 'P2 longest', value: this.maxLength2.toString() },
+      { label: 'Time', value: formatDuration(survivalSeconds) }
+    ])
+
+    if (this.gameMode === 'bvb') {
+      // Auto-record both bots; no prompt needed.
+      addEntry('bvb', {
+        name: this.activeBot.name,
+        score: this.score,
+        longestSnake: this.maxLength1,
+        survivalSeconds,
+        timestamp: Date.now(),
+        result: p1Result,
+        opponent: this.activeBot2.name
+      })
+      addEntry('bvb', {
+        name: this.activeBot2.name,
+        score: this.score2,
+        longestSnake: this.maxLength2,
+        survivalSeconds,
+        timestamp: Date.now(),
+        result: p2Result,
+        opponent: this.activeBot.name
+      })
+      this.clearLeaderboardPrompt()
+    } else {
+      // PvP: prompt for the winning player (or the higher scorer on draw).
+      const useP1 =
+        p1Result === 'win' ||
+        (p1Result === 'draw' && this.score >= this.score2)
+      const entry: LeaderboardEntry = useP1
+        ? {
+            name: '',
+            score: this.score,
+            longestSnake: this.maxLength1,
+            survivalSeconds,
+            timestamp: Date.now(),
+            result: p1Result
+          }
+        : {
+            name: '',
+            score: this.score2,
+            longestSnake: this.maxLength2,
+            survivalSeconds,
+            timestamp: Date.now(),
+            result: p2Result
+          }
+      this.maybePromptForEntry('pvp', entry)
+    }
+
     this.showScreen('game-over')
+  }
+
+  private survivalSeconds(): number {
+    if (this.gameStartTime === 0) return 0
+    return Math.max(0, (performance.now() - this.gameStartTime) / 1000)
+  }
+
+  private renderGameOverStats(stats: Array<{ label: string; value: string }>) {
+    const wrap = document.getElementById('game-over-stats')!
+    wrap.innerHTML = ''
+    for (const stat of stats) {
+      const span = document.createElement('div')
+      span.innerHTML = `<span class="stat-label">${stat.label}:</span><span>${stat.value}</span>`
+      wrap.appendChild(span)
+    }
+  }
+
+  private clearLeaderboardPrompt() {
+    this.pendingEntry = null
+    document.getElementById('leaderboard-prompt')!.classList.add('hidden')
+    document.getElementById('leaderboard-confirmation')!.classList.add('hidden')
+  }
+
+  private maybePromptForEntry(mode: LeaderboardMode, entry: LeaderboardEntry) {
+    this.clearLeaderboardPrompt()
+    if (!qualifies(mode, entry.score, entry.longestSnake, entry.survivalSeconds)) return
+
+    this.pendingEntry = { mode, entry }
+    const promptEl = document.getElementById('leaderboard-prompt')!
+    const rankEl = document.getElementById('leaderboard-prompt-rank')!
+    const existing = getLeaderboard(mode)
+    const rank = existing.filter(e =>
+      e.score > entry.score ||
+      (e.score === entry.score && e.longestSnake > entry.longestSnake) ||
+      (e.score === entry.score && e.longestSnake === entry.longestSnake && e.survivalSeconds > entry.survivalSeconds)
+    ).length + 1
+    rankEl.textContent = `Rank #${rank} in ${MODE_LABELS[mode]}`
+    promptEl.classList.remove('hidden')
+
+    const input = document.getElementById('leaderboard-name-input') as HTMLInputElement
+    input.value = localStorage.getItem('snake-last-name') ?? ''
+    input.focus()
+    input.select()
+  }
+
+  private submitPendingEntry() {
+    if (!this.pendingEntry) return
+    const input = document.getElementById('leaderboard-name-input') as HTMLInputElement
+    const name = sanitizeName(input.value)
+    localStorage.setItem('snake-last-name', name)
+
+    const finalEntry: LeaderboardEntry = { ...this.pendingEntry.entry, name }
+    const rank = addEntry(this.pendingEntry.mode, finalEntry)
+    const modeLabel = MODE_LABELS[this.pendingEntry.mode]
+
+    document.getElementById('leaderboard-prompt')!.classList.add('hidden')
+    const confirmation = document.getElementById('leaderboard-confirmation')!
+    confirmation.textContent = rank
+      ? `Saved as #${rank} on ${modeLabel}`
+      : `Saved to ${modeLabel}`
+    confirmation.classList.remove('hidden')
+    this.pendingEntry = null
+  }
+
+  // === Leaderboard UI ===
+
+  private openLeaderboards(mode: LeaderboardMode) {
+    this.leaderboardActiveMode = mode
+    for (const tab of document.querySelectorAll<HTMLButtonElement>('.lb-tab')) {
+      tab.classList.toggle('active', tab.dataset.mode === mode)
+    }
+    this.renderLeaderboardTable(mode)
+    this.showScreen('leaderboards')
+  }
+
+  private renderLeaderboardTable(mode: LeaderboardMode) {
+    const wrap = document.getElementById('leaderboard-table-wrap')!
+    const entries = getLeaderboard(mode)
+    if (entries.length === 0) {
+      wrap.innerHTML = `<div class="leaderboard-empty">No entries yet for ${MODE_LABELS[mode]} — play a game to set the bar.</div>`
+      return
+    }
+
+    const showResult = mode !== 'single'
+    const showOpponent = mode === 'bvb'
+
+    const rows = entries.map((entry, i) => {
+      const cells: string[] = []
+      cells.push(`<td class="rank">${i + 1}</td>`)
+      cells.push(`<td>${escapeHtml(entry.name)}</td>`)
+      cells.push(`<td class="score">${entry.score}</td>`)
+      cells.push(`<td>${entry.longestSnake}</td>`)
+      cells.push(`<td>${formatDuration(entry.survivalSeconds)}</td>`)
+      if (showResult) {
+        const result = entry.result ?? '—'
+        cells.push(`<td class="result-${result}">${result === '—' ? '—' : result.toUpperCase()}</td>`)
+      }
+      if (showOpponent) {
+        cells.push(`<td>${escapeHtml(entry.opponent ?? '—')}</td>`)
+      }
+      return `<tr>${cells.join('')}</tr>`
+    }).join('')
+
+    const headers = ['#', 'Name', 'Score', 'Longest', 'Time']
+    if (showResult) headers.push('Result')
+    if (showOpponent) headers.push('Opponent')
+
+    wrap.innerHTML = `
+      <table class="leaderboard-table">
+        <thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `
   }
 
   // === Screen management ===
