@@ -5,6 +5,7 @@ export type BotState = {
   food: Position
   gridSize: number
   direction: Direction
+  opponentSnake?: Position[]
 }
 
 export type AnalysisResult = {
