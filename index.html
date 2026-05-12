@@ -11,35 +11,54 @@
       <div id="menu" class="screen">
         <h1>Snake Game</h1>
         <div class="high-score">High Score: <span id="high-score">0</span></div>
-        <div class="bot-selection">
-          <label for="menu-bot-select">Bot Profile</label>
-          <select id="menu-bot-select"></select>
-          <div id="menu-bot-description" class="bot-description"></div>
+        <div class="bot-selections">
+          <div class="bot-selection">
+            <label for="menu-bot-select">Bot 1</label>
+            <select id="menu-bot-select"></select>
+            <div id="menu-bot-description" class="bot-description"></div>
+          </div>
+          <div class="bot-selection">
+            <label for="menu-bot2-select">Bot 2</label>
+            <select id="menu-bot2-select"></select>
+            <div id="menu-bot2-description" class="bot-description"></div>
+          </div>
         </div>
-        <button id="new-game">New Game</button>
-        <button id="start-demo" class="secondary-button">Start Demo Bot</button>
+        <div class="menu-buttons">
+          <button id="new-game">New Game</button>
+          <button id="two-player">Two Player</button>
+          <button id="bot-vs-bot" class="secondary-button">Bot vs Bot</button>
+          <button id="start-demo" class="secondary-button">Start Demo Bot</button>
+        </div>
       </div>
       <div id="game" class="screen hidden">
         <div class="game-info">
-          <div>Score: <span id="score">0</span></div>
+          <div id="score-display">Score: <span id="score">0</span></div>
+          <div id="p1-score-display" class="hidden">P1: <span id="p1-score" class="p1-color">0</span></div>
+          <div id="p2-score-display" class="hidden">P2: <span id="p2-score" class="p2-color">0</span></div>
           <div>Level: <span id="level">1</span></div>
           <div>Grid: <span id="grid-size">10x10</span></div>
-          <div>Bot: <span id="bot-status">OFF</span></div>
+          <div id="bot-status-display">Bot: <span id="bot-status">OFF</span></div>
         </div>
-        <div class="bot-selection">
+        <div class="bot-selection" id="game-bot-selection">
           <label for="game-bot-select">Bot Profile</label>
           <select id="game-bot-select"></select>
           <div id="game-bot-description" class="bot-description"></div>
         </div>
         <button id="toggle-bot" class="secondary-button">Enable Bot (B)</button>
         <canvas id="canvas"></canvas>
-        <div class="controls">Use Arrow Keys or WASD to move | Press P to Pause | Press R to Reset | +/- to change grid size | Press B to toggle bot | Press any direction to start</div>
+        <div class="controls" id="controls-text">Use Arrow Keys or WASD to move | Press P to Pause | Press R to Reset | +/- to change grid size | Press B to toggle bot | Press any direction to start</div>
       </div>
       <div id="game-over" class="screen hidden">
-        <h1>Game Over!</h1>
-        <div class="final-score">Score: <span id="final-score">0</span></div>
-        <div class="high-score">High Score: <span id="game-over-high-score">0</span></div>
+        <h1 id="game-over-title">Game Over!</h1>
+        <div id="game-over-winner" class="winner-text hidden"></div>
+        <div id="single-final-score" class="final-score">Score: <span id="final-score">0</span></div>
+        <div id="two-player-final-scores" class="final-scores-two hidden">
+          <div class="final-score">P1 Score: <span id="final-p1-score" class="p1-color">0</span></div>
+          <div class="final-score">P2 Score: <span id="final-p2-score" class="p2-color">0</span></div>
+        </div>
+        <div class="high-score" id="high-score-display">High Score: <span id="game-over-high-score">0</span></div>
         <button id="play-again">Play Again</button>
+        <button id="back-to-menu" class="secondary-button">Menu</button>
       </div>
       <div id="pause" class="screen hidden overlay">
         <h1>Paused</h1>

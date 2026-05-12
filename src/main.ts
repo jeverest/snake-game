@@ -3,20 +3,36 @@ import { AVAILABLE_BOTS, DEFAULT_BOT_ID, getBotById } from './bots'
 import type { BotHelpers, BotState, SnakeBot } from './bots/bot-types'
 import { DIRECTIONS, DIRECTION_VECTORS, OPPOSITE_DIRECTIONS, type Direction, type Position } from './game-types'
 
+type GameMode = 'single' | 'pvp' | 'bvb'
+
 const ISO_MIN_WIDTH = 300
 const ISO_MAX_WIDTH = 1200
 
 class SnakeGame {
   private canvas: HTMLCanvasElement
   private ctx: CanvasRenderingContext2D
+
+  // Game mode
+  private gameMode: GameMode = 'single'
+
+  // Player 1 state
   private snake: Position[] = []
   private snakeSet: Set<string> = new Set()
-  private food: Position = { x: 0, y: 0 }
   private direction: Direction = 'RIGHT'
   private nextDirection: Direction = 'RIGHT'
+  private score: number = 0
+
+  // Player 2 state
+  private snake2: Position[] = []
+  private snakeSet2: Set<string> = new Set()
+  private direction2: Direction = 'LEFT'
+  private nextDirection2: Direction = 'LEFT'
+  private score2: number = 0
+
+  // Shared game state
+  private food: Position = { x: 0, y: 0 }
   private gridSize: number = 10
   private initialGridSize: number = 10
-  private score: number = 0
   private level: number = 1
   private gameSpeed: number = 200
   private baseSpeed: number = 200
@@ -24,11 +40,19 @@ class SnakeGame {
   private isPaused: boolean = false
   private isGameOver: boolean = false
   private gameStarted: boolean = false
+
+  // Bot state (P1 / single player)
   private botEnabled: boolean = false
   private selectedBotId: string = DEFAULT_BOT_ID
   private activeBot: SnakeBot = getBotById(DEFAULT_BOT_ID) ?? AVAILABLE_BOTS[0]
   private botSelectors: HTMLSelectElement[] = []
 
+  // Bot state (P2)
+  private selectedBotId2: string = AVAILABLE_BOTS.length > 1 ? AVAILABLE_BOTS[1].id : DEFAULT_BOT_ID
+  private activeBot2: SnakeBot = AVAILABLE_BOTS.length > 1 ? AVAILABLE_BOTS[1] : (getBotById(DEFAULT_BOT_ID) ?? AVAILABLE_BOTS[0])
+  private botSelectors2: HTMLSelectElement[] = []
+
+  // Isometric rendering
   private isoAngle: number = Math.PI / 3 // z-rotation: 30° (45° = standard diamond)
   private perspectiveRatio: number = 0.5  // vertical squash for top-down tilt
   private basisXx: number = 0
@@ -44,6 +68,7 @@ class SnakeGame {
   private isoOriginY: number = 0
   private isoCache: { x: number; y: number }[][] = []
 
+  // Auto-rotation
   private autoRotating: boolean = false
   private autoRotateRafId: number | null = null
   private autoRotateLastTime: number = 0
@@ -59,6 +84,12 @@ class SnakeGame {
     this.updateBotUI()
     window.addEventListener('resize', () => { this.updateCanvasSize(); this.draw() })
   }
+
+  private isTwoSnakeMode(): boolean {
+    return this.gameMode === 'pvp' || this.gameMode === 'bvb'
+  }
+
+  // === Isometric Rendering ===
 
   private getIsoWidth(): number {
     // Leave room for page padding (2rem = 32px each side) and canvas border (3px each side)
@@ -301,6 +332,8 @@ class SnakeGame {
     ctx.fill()
   }
 
+  // === Auto-rotation ===
+
   private startAutoRotate() {
     if (this.autoRotating) return
     this.autoRotating = true
@@ -330,6 +363,8 @@ class SnakeGame {
     this.autoRotateRafId = requestAnimationFrame(t => this.autoRotateStep(t))
   }
 
+  // === Main draw ===
+
   private draw() {
     const ctx = this.ctx
     ctx.fillStyle = '#1a1a1a'
@@ -340,11 +375,18 @@ class SnakeGame {
     this.drawGroundBorder()
 
     // Collect all objects to render
-    const objects: { x: number; y: number; type: 'head' | 'body' | 'food' }[] = []
+    const objects: { x: number; y: number; type: 'head' | 'body' | 'food' | 'head2' | 'body2' }[] = []
 
     this.snake.forEach((segment, index) => {
       objects.push({ x: segment.x, y: segment.y, type: index === 0 ? 'head' : 'body' })
     })
+
+    if (this.isTwoSnakeMode()) {
+      this.snake2.forEach((segment, index) => {
+        objects.push({ x: segment.x, y: segment.y, type: index === 0 ? 'head2' : 'body2' })
+      })
+    }
+
     objects.push({ x: this.food.x, y: this.food.y, type: 'food' })
 
     // Sort back-to-front (painter's algorithm): lower projected Y drawn first
@@ -366,6 +408,12 @@ class SnakeGame {
         case 'body':
           this.drawBlock(obj.x, obj.y, '#22c55e', '#16a34a', '#15803d')
           break
+        case 'head2':
+          this.drawBlock(obj.x, obj.y, '#60a5fa', '#3b82f6', '#2563eb')
+          break
+        case 'body2':
+          this.drawBlock(obj.x, obj.y, '#3b82f6', '#2563eb', '#1d4ed8')
+          break
         case 'food':
           this.drawBlock(obj.x, obj.y, '#ef4444', '#dc2626', '#b91c1c')
           break
@@ -373,19 +421,32 @@ class SnakeGame {
     }
   }
 
+  // === Event handling ===
+
   private setupEventListeners() {
     document.addEventListener('keydown', this.handleKeyPress.bind(this))
     this.setupBotSelectors()
-    document.getElementById('new-game')!.addEventListener('click', () => this.startNewGame())
+    document.getElementById('new-game')!.addEventListener('click', () => this.startNewGame('single'))
+    document.getElementById('two-player')!.addEventListener('click', () => this.startNewGame('pvp'))
+    document.getElementById('bot-vs-bot')!.addEventListener('click', () => this.startNewGame('bvb'))
     document.getElementById('start-demo')!.addEventListener('click', () => {
       this.botEnabled = true
-      this.startNewGame()
+      this.startNewGame('single')
     })
     document.getElementById('toggle-bot')!.addEventListener('click', () => this.toggleBot())
     document.getElementById('play-again')!.addEventListener('click', () => this.startNewGame())
+    document.getElementById('back-to-menu')!.addEventListener('click', () => {
+      if (this.gameLoop) clearInterval(this.gameLoop)
+      this.gameLoop = null
+      this.stopAutoRotate()
+      this.botEnabled = false
+      this.updateBotUI()
+      this.showScreen('menu')
+    })
   }
 
   private setupBotSelectors() {
+    // Bot 1 selectors (menu + game screen)
     const menuSelect = document.getElementById('menu-bot-select') as HTMLSelectElement | null
     const gameSelect = document.getElementById('game-bot-select') as HTMLSelectElement | null
     this.botSelectors = [menuSelect, gameSelect].filter((select): select is HTMLSelectElement => select !== null)
@@ -401,6 +462,24 @@ class SnakeGame {
       select.addEventListener('change', event => {
         const target = event.target as HTMLSelectElement
         this.handleBotSelection(target.value)
+      })
+    }
+
+    // Bot 2 selector (menu only)
+    const menuBot2Select = document.getElementById('menu-bot2-select') as HTMLSelectElement | null
+    this.botSelectors2 = [menuBot2Select].filter((select): select is HTMLSelectElement => select !== null)
+
+    for (const select of this.botSelectors2) {
+      select.innerHTML = ''
+      for (const bot of AVAILABLE_BOTS) {
+        const option = document.createElement('option')
+        option.value = bot.id
+        option.textContent = bot.name
+        select.appendChild(option)
+      }
+      select.addEventListener('change', event => {
+        const target = event.target as HTMLSelectElement
+        this.handleBotSelection2(target.value)
       })
     }
 
@@ -421,6 +500,17 @@ class SnakeGame {
       return
     }
 
+    if (e.key === 'Escape') {
+      if (!document.getElementById('menu')!.classList.contains('hidden')) return
+      if (this.gameLoop) clearInterval(this.gameLoop)
+      this.gameLoop = null
+      this.stopAutoRotate()
+      this.botEnabled = false
+      this.updateBotUI()
+      this.showScreen('menu')
+      return
+    }
+
     if (e.key === 'p' || e.key === 'P') {
       if (!this.isGameOver && this.gameLoop !== null) {
         this.togglePause()
@@ -429,12 +519,14 @@ class SnakeGame {
     }
 
     if (e.key === 'b' || e.key === 'B') {
-      this.toggleBot()
+      if (!this.isTwoSnakeMode()) {
+        this.toggleBot()
+      }
       return
     }
 
     if ((e.key === '+' || e.key === '=' || e.key === '-' || e.key === '_') &&
-      !this.gameStarted && !this.isGameOver &&
+      !this.gameStarted && !this.isGameOver && !this.isTwoSnakeMode() &&
       !document.getElementById('game')!.classList.contains('hidden')) {
       if (e.key === '+' || e.key === '=') {
         this.initialGridSize = Math.min(this.initialGridSize + 5, 50)
@@ -484,39 +576,66 @@ class SnakeGame {
 
     if (this.isPaused || this.isGameOver) return
 
-    const keyMap: Record<string, Direction> = {
-      'ArrowUp': 'UP',
-      'ArrowDown': 'DOWN',
-      'ArrowLeft': 'LEFT',
-      'ArrowRight': 'RIGHT',
-      'w': 'UP',
-      'W': 'UP',
-      'a': 'LEFT',
-      'A': 'LEFT',
-      's': 'DOWN',
-      'S': 'DOWN',
-      'd': 'RIGHT',
-      'D': 'RIGHT'
-    }
+    if (this.isTwoSnakeMode()) {
+      // P1: WASD only
+      const p1KeyMap: Record<string, Direction> = {
+        'w': 'UP', 'W': 'UP',
+        'a': 'LEFT', 'A': 'LEFT',
+        's': 'DOWN', 'S': 'DOWN',
+        'd': 'RIGHT', 'D': 'RIGHT'
+      }
+      const p1Dir = p1KeyMap[e.key]
+      if (p1Dir && this.gameMode === 'pvp' && this.isValidDirection(p1Dir, this.direction)) {
+        this.nextDirection = p1Dir
+      }
 
-    const newDirection = keyMap[e.key]
-    if (newDirection) {
-      if (this.botEnabled) return
+      // P2: Arrow keys only
+      const p2KeyMap: Record<string, Direction> = {
+        'ArrowUp': 'UP',
+        'ArrowDown': 'DOWN',
+        'ArrowLeft': 'LEFT',
+        'ArrowRight': 'RIGHT'
+      }
+      const p2Dir = p2KeyMap[e.key]
+      if (p2Dir && this.gameMode === 'pvp' && this.isValidDirection(p2Dir, this.direction2)) {
+        this.nextDirection2 = p2Dir
+      }
+    } else {
+      // Single player: both WASD and arrows control the snake
+      const keyMap: Record<string, Direction> = {
+        'ArrowUp': 'UP',
+        'ArrowDown': 'DOWN',
+        'ArrowLeft': 'LEFT',
+        'ArrowRight': 'RIGHT',
+        'w': 'UP',
+        'W': 'UP',
+        'a': 'LEFT',
+        'A': 'LEFT',
+        's': 'DOWN',
+        'S': 'DOWN',
+        'd': 'RIGHT',
+        'D': 'RIGHT'
+      }
 
-      if (this.isValidDirection(newDirection)) {
-        this.nextDirection = newDirection
+      const newDirection = keyMap[e.key]
+      if (newDirection) {
+        if (this.botEnabled) return
 
-        // Start the game on first directional input
-        if (!this.gameStarted) {
-          this.gameStarted = true
-          this.gameLoop = window.setInterval(() => this.update(), this.gameSpeed)
+        if (this.isValidDirection(newDirection, this.direction)) {
+          this.nextDirection = newDirection
+
+          // Start the game on first directional input
+          if (!this.gameStarted) {
+            this.gameStarted = true
+            this.gameLoop = window.setInterval(() => this.update(), this.gameSpeed)
+          }
         }
       }
     }
   }
 
-  private isValidDirection(newDirection: Direction): boolean {
-    return OPPOSITE_DIRECTIONS[this.direction] !== newDirection
+  private isValidDirection(newDirection: Direction, currentDirection: Direction): boolean {
+    return OPPOSITE_DIRECTIONS[currentDirection] !== newDirection
   }
 
   private togglePause() {
@@ -545,6 +664,8 @@ class SnakeGame {
     }
   }
 
+  // === Bot selection ===
+
   private handleBotSelection(botId: string) {
     const selected = getBotById(botId)
     if (!selected) return
@@ -556,9 +677,22 @@ class SnakeGame {
     this.updateBotUI()
   }
 
+  private handleBotSelection2(botId: string) {
+    const selected = getBotById(botId)
+    if (!selected) return
+
+    this.selectedBotId2 = selected.id
+    this.activeBot2 = selected
+    this.syncBotSelectors()
+    this.updateBotDescriptions()
+  }
+
   private syncBotSelectors() {
     for (const select of this.botSelectors) {
       select.value = this.selectedBotId
+    }
+    for (const select of this.botSelectors2) {
+      select.value = this.selectedBotId2
     }
   }
 
@@ -570,6 +704,10 @@ class SnakeGame {
     }
     if (gameDescription) {
       gameDescription.textContent = this.activeBot.description
+    }
+    const menuBot2Description = document.getElementById('menu-bot2-description')
+    if (menuBot2Description) {
+      menuBot2Description.textContent = this.activeBot2.description
     }
   }
 
@@ -586,21 +724,55 @@ class SnakeGame {
     demoButton.textContent = this.botEnabled ? `Demo Bot Enabled (${this.activeBot.name})` : `Start Demo Bot (${this.activeBot.name})`
   }
 
+  // === Game loop ===
+
   private startLoopIfNeeded() {
     if (this.gameLoop !== null) return
     this.gameStarted = true
     this.gameLoop = window.setInterval(() => this.update(), this.gameSpeed)
   }
 
-  startNewGame() {
+  startNewGame(mode?: GameMode) {
+    if (mode !== undefined) this.gameMode = mode
+
+    // Reset bot flag for two-snake modes
+    if (this.isTwoSnakeMode()) {
+      this.botEnabled = false
+    }
+
     this.gridSize = this.initialGridSize
     this.updateCanvasSize()
-    const center = Math.floor(this.gridSize / 2)
-    this.snake = [{ x: center, y: center }]
-    this.snakeSet = new Set([`${center},${center}`])
-    this.direction = 'RIGHT'
-    this.nextDirection = 'RIGHT'
-    this.score = 0
+
+    if (this.isTwoSnakeMode()) {
+      // Place snakes on opposite sides
+      const quarter = Math.floor(this.gridSize / 4)
+      const center = Math.floor(this.gridSize / 2)
+      const p2x = this.gridSize - 1 - quarter
+
+      // P1: left side, facing right
+      this.snake = [{ x: quarter, y: center }]
+      this.snakeSet = new Set([`${quarter},${center}`])
+      this.direction = 'RIGHT'
+      this.nextDirection = 'RIGHT'
+      this.score = 0
+
+      // P2: right side, facing left
+      this.snake2 = [{ x: p2x, y: center }]
+      this.snakeSet2 = new Set([`${p2x},${center}`])
+      this.direction2 = 'LEFT'
+      this.nextDirection2 = 'LEFT'
+      this.score2 = 0
+    } else {
+      const center = Math.floor(this.gridSize / 2)
+      this.snake = [{ x: center, y: center }]
+      this.snakeSet = new Set([`${center},${center}`])
+      this.direction = 'RIGHT'
+      this.nextDirection = 'RIGHT'
+      this.score = 0
+      this.snake2 = []
+      this.snakeSet2 = new Set()
+    }
+
     this.level = 1
     this.baseSpeed = 200
     this.gameSpeed = this.baseSpeed
@@ -615,10 +787,15 @@ class SnakeGame {
     if (this.gameLoop) clearInterval(this.gameLoop)
     this.gameLoop = null
 
+    this.updateModeUI()
     this.updateBotUI()
 
-    if (this.botEnabled) {
+    // Two-snake modes and bot demos start the loop immediately
+    if (this.isTwoSnakeMode() || this.botEnabled) {
       this.startLoopIfNeeded()
+    }
+
+    if (this.gameMode === 'bvb' || (this.gameMode === 'single' && this.botEnabled)) {
       this.startAutoRotate()
     } else {
       this.stopAutoRotate()
@@ -631,6 +808,14 @@ class SnakeGame {
   private update() {
     if (this.isPaused || this.isGameOver) return
 
+    if (this.isTwoSnakeMode()) {
+      this.updateTwoPlayer()
+    } else {
+      this.updateSinglePlayer()
+    }
+  }
+
+  private updateSinglePlayer() {
     if (this.botEnabled) {
       const botDirection = this.chooseBotDirection()
       if (botDirection) {
@@ -669,6 +854,82 @@ class SnakeGame {
     this.updateUI()
   }
 
+  private updateTwoPlayer() {
+    // Get bot directions for BvB mode
+    if (this.gameMode === 'bvb') {
+      const dir1 = this.chooseBotDirectionForPlayer(1)
+      if (dir1) this.nextDirection = dir1
+      const dir2 = this.chooseBotDirectionForPlayer(2)
+      if (dir2) this.nextDirection2 = dir2
+    }
+
+    this.direction = this.nextDirection
+    this.direction2 = this.nextDirection2
+
+    // Calculate new heads
+    const head1 = { ...this.snake[0] }
+    const vec1 = DIRECTION_VECTORS[this.direction]
+    head1.x += vec1.x
+    head1.y += vec1.y
+
+    const head2 = { ...this.snake2[0] }
+    const vec2 = DIRECTION_VECTORS[this.direction2]
+    head2.x += vec2.x
+    head2.y += vec2.y
+
+    // Check collisions for each snake
+    const p1HitsWall = !this.inBounds(head1)
+    const p1HitsSelf = this.snakeSet.has(`${head1.x},${head1.y}`)
+    const p1HitsP2 = this.snakeSet2.has(`${head1.x},${head1.y}`)
+
+    const p2HitsWall = !this.inBounds(head2)
+    const p2HitsSelf = this.snakeSet2.has(`${head2.x},${head2.y}`)
+    const p2HitsP1 = this.snakeSet.has(`${head2.x},${head2.y}`)
+
+    // Head-to-head collision
+    const headToHead = head1.x === head2.x && head1.y === head2.y
+
+    const p1Dead = p1HitsWall || p1HitsSelf || p1HitsP2 || headToHead
+    const p2Dead = p2HitsWall || p2HitsSelf || p2HitsP1 || headToHead
+
+    if (p1Dead || p2Dead) {
+      this.endGameTwoPlayer(p1Dead, p2Dead)
+      return
+    }
+
+    // Apply moves
+    this.snake.unshift(head1)
+    this.snakeSet.add(`${head1.x},${head1.y}`)
+    this.snake2.unshift(head2)
+    this.snakeSet2.add(`${head2.x},${head2.y}`)
+
+    // Check food
+    const p1AteFood = head1.x === this.food.x && head1.y === this.food.y
+    const p2AteFood = head2.x === this.food.x && head2.y === this.food.y
+
+    if (p1AteFood) this.score++
+    if (p2AteFood) this.score2++
+    if (p1AteFood || p2AteFood) {
+      this.spawnFood()
+      this.checkGridExpansion()
+    }
+
+    // Remove tails if didn't eat
+    if (!p1AteFood) {
+      const tail = this.snake.pop()!
+      this.snakeSet.delete(`${tail.x},${tail.y}`)
+    }
+    if (!p2AteFood) {
+      const tail = this.snake2.pop()!
+      this.snakeSet2.delete(`${tail.x},${tail.y}`)
+    }
+
+    this.draw()
+    this.updateUI()
+  }
+
+  // === Bot AI ===
+
   private chooseBotDirection(): Direction | null {
     const botState: BotState = {
       snake: this.snake,
@@ -685,11 +946,61 @@ class SnakeGame {
     }
 
     const direction = this.activeBot.chooseDirection(botState, botHelpers)
-    if (!direction || !this.isValidDirection(direction)) {
+    if (!direction || !this.isValidDirection(direction, this.direction)) {
       return null
     }
     return this.simulateMove(this.snake, direction, this.food) ? direction : null
   }
+
+  private chooseBotDirectionForPlayer(player: 1 | 2): Direction | null {
+    const snake = player === 1 ? this.snake : this.snake2
+    const currentDirection = player === 1 ? this.direction : this.direction2
+    const bot = player === 1 ? this.activeBot : this.activeBot2
+    const opponentSnake = player === 1 ? this.snake2 : this.snake
+    const opponentSnakeSet = player === 1 ? this.snakeSet2 : this.snakeSet
+
+    const botState: BotState = {
+      snake,
+      food: this.food,
+      gridSize: this.gridSize,
+      direction: currentDirection,
+      opponentSnake
+    }
+
+    // Create helpers that include opponent snake as blocked
+    const botHelpers: BotHelpers = {
+      simulateMove: (s, dir, food) => {
+        const nextHead = this.getMovedPosition(s[0], dir)
+        if (this.wouldCollide(nextHead, s) || opponentSnakeSet.has(`${nextHead.x},${nextHead.y}`)) {
+          return null
+        }
+        const nextSnake = [nextHead, ...s]
+        if (!(nextHead.x === food.x && nextHead.y === food.y)) {
+          nextSnake.pop()
+        }
+        return nextSnake
+      },
+      analyzePosition: (start, s, targets) => {
+        return this.analyzePosition(start, s, targets, opponentSnakeSet)
+      },
+      getCandidateDirections: dir => this.getCandidateDirections(dir)
+    }
+
+    const direction = bot.chooseDirection(botState, botHelpers)
+    if (!direction || !this.isValidDirection(direction, currentDirection)) {
+      return null
+    }
+
+    // Validate the chosen move
+    const nextHead = this.getMovedPosition(snake[0], direction)
+    if (this.wouldCollide(nextHead, snake) || opponentSnakeSet.has(`${nextHead.x},${nextHead.y}`)) {
+      return null
+    }
+
+    return direction
+  }
+
+  // === Collision and movement helpers ===
 
   private simulateMove(snake: Position[], direction: Direction, food: Position): Position[] | null {
     const nextHead = this.getMovedPosition(snake[0], direction)
@@ -739,7 +1050,8 @@ class SnakeGame {
   private analyzePosition(
     start: Position,
     snake: Position[],
-    targets: { tail: Position; food: Position }
+    targets: { tail: Position; food: Position },
+    additionalBlocked?: Set<string>
   ): { reachableArea: number; canReachTail: boolean; pathToFood: number | null } {
     const startKey = this.positionToKey(start)
     const tailKey = this.positionToKey(targets.tail)
@@ -753,6 +1065,11 @@ class SnakeGame {
       const key = this.positionToKey(segment)
       if (key === startKey) continue
       blocked.add(key)
+    }
+    if (additionalBlocked) {
+      for (const key of additionalBlocked) {
+        blocked.add(key)
+      }
     }
 
     const queue: Array<{ position: Position; distance: number }> = [{ position: start, distance: 0 }]
@@ -796,10 +1113,12 @@ class SnakeGame {
     return this.wouldCollide(head, this.snake, this.snakeSet)
   }
 
+  // === Grid expansion ===
+
   private checkGridExpansion() {
     const totalCells = this.gridSize * this.gridSize
-    const snakeLength = this.snake.length
-    const fillPercentage = snakeLength / totalCells
+    const combinedLength = this.snake.length + (this.isTwoSnakeMode() ? this.snake2.length : 0)
+    const fillPercentage = combinedLength / totalCells
 
     if (fillPercentage >= 0.25) {
       this.expandGrid()
@@ -818,14 +1137,19 @@ class SnakeGame {
     this.spawnFood()
   }
 
+  // === Food ===
+
   private spawnFood() {
     const totalCells = this.gridSize * this.gridSize
-    if (this.snake.length > totalCells * 0.5) {
+    const combinedLength = this.snake.length + (this.isTwoSnakeMode() ? this.snake2.length : 0)
+
+    if (combinedLength > totalCells * 0.5) {
       // At high fill ratios, collect empty cells directly
       const emptyCells: Position[] = []
       for (let y = 0; y < this.gridSize; y++) {
         for (let x = 0; x < this.gridSize; x++) {
-          if (!this.snakeSet.has(`${x},${y}`)) {
+          const key = `${x},${y}`
+          if (!this.snakeSet.has(key) && (!this.isTwoSnakeMode() || !this.snakeSet2.has(key))) {
             emptyCells.push({ x, y })
           }
         }
@@ -842,15 +1166,54 @@ class SnakeGame {
         x: Math.floor(Math.random() * this.gridSize),
         y: Math.floor(Math.random() * this.gridSize)
       }
-    } while (this.snakeSet.has(`${newFood.x},${newFood.y}`))
+    } while (
+      this.snakeSet.has(`${newFood.x},${newFood.y}`) ||
+      (this.isTwoSnakeMode() && this.snakeSet2.has(`${newFood.x},${newFood.y}`))
+    )
     this.food = newFood
   }
 
+  // === UI ===
+
   private updateUI() {
-    document.getElementById('score')!.textContent = this.score.toString()
+    if (this.isTwoSnakeMode()) {
+      document.getElementById('p1-score')!.textContent = this.score.toString()
+      document.getElementById('p2-score')!.textContent = this.score2.toString()
+    } else {
+      document.getElementById('score')!.textContent = this.score.toString()
+    }
     document.getElementById('level')!.textContent = this.level.toString()
     document.getElementById('grid-size')!.textContent = `${this.gridSize}x${this.gridSize}`
   }
+
+  private updateModeUI() {
+    const isTwoPlayer = this.isTwoSnakeMode()
+
+    const scoreDisplay = document.getElementById('score-display')!
+    const p1ScoreDisplay = document.getElementById('p1-score-display')!
+    const p2ScoreDisplay = document.getElementById('p2-score-display')!
+    const botStatusDisplay = document.getElementById('bot-status-display')!
+    const gameBotSelection = document.getElementById('game-bot-selection')!
+    const toggleBot = document.getElementById('toggle-bot')!
+    const controlsText = document.getElementById('controls-text')!
+
+    scoreDisplay.classList.toggle('hidden', isTwoPlayer)
+    p1ScoreDisplay.classList.toggle('hidden', !isTwoPlayer)
+    p2ScoreDisplay.classList.toggle('hidden', !isTwoPlayer)
+    botStatusDisplay.classList.toggle('hidden', isTwoPlayer)
+    gameBotSelection.classList.toggle('hidden', isTwoPlayer)
+    toggleBot.classList.toggle('hidden', isTwoPlayer)
+
+    if (this.gameMode === 'pvp') {
+      controlsText.textContent = 'P1: WASD | P2: Arrow Keys | P to Pause | R to Reset | Q/E to rotate'
+    } else if (this.gameMode === 'bvb') {
+      controlsText.textContent = `${this.activeBot.name} vs ${this.activeBot2.name} | P to Pause | R to Reset | Q/E to rotate`
+    } else {
+      controlsText.textContent = 'Use Arrow Keys or WASD to move | Press P to Pause | Press R to Reset | +/- to change grid size | Press B to toggle bot | Press any direction to start'
+    }
+  }
+
+  // === Game over ===
 
   private endGame() {
     this.isGameOver = true
@@ -865,10 +1228,47 @@ class SnakeGame {
       this.saveHighScore(this.score)
     }
 
+    document.getElementById('game-over-title')!.textContent = 'Game Over!'
+    document.getElementById('game-over-winner')!.classList.add('hidden')
+    document.getElementById('single-final-score')!.classList.remove('hidden')
     document.getElementById('final-score')!.textContent = this.score.toString()
     document.getElementById('game-over-high-score')!.textContent = Math.max(this.score, highScore).toString()
+    document.getElementById('two-player-final-scores')!.classList.add('hidden')
+    document.getElementById('high-score-display')!.classList.remove('hidden')
     this.showScreen('game-over')
   }
+
+  private endGameTwoPlayer(p1Dead: boolean, p2Dead: boolean) {
+    this.isGameOver = true
+    this.stopAutoRotate()
+    if (this.gameLoop) {
+      clearInterval(this.gameLoop)
+      this.gameLoop = null
+    }
+
+    let winnerText: string
+    if (p1Dead && p2Dead) {
+      winnerText = 'Draw!'
+    } else if (p1Dead) {
+      winnerText = 'Player 2 Wins!'
+    } else {
+      winnerText = 'Player 1 Wins!'
+    }
+
+    document.getElementById('game-over-title')!.textContent = 'Game Over!'
+    const winnerEl = document.getElementById('game-over-winner')!
+    winnerEl.textContent = winnerText
+    winnerEl.classList.remove('hidden')
+    document.getElementById('single-final-score')!.classList.add('hidden')
+    const twoPlayerScores = document.getElementById('two-player-final-scores')!
+    twoPlayerScores.classList.remove('hidden')
+    document.getElementById('final-p1-score')!.textContent = this.score.toString()
+    document.getElementById('final-p2-score')!.textContent = this.score2.toString()
+    document.getElementById('high-score-display')!.classList.add('hidden')
+    this.showScreen('game-over')
+  }
+
+  // === Screen management ===
 
   private showScreen(screenId: string) {
     document.querySelectorAll('.screen:not(.overlay)').forEach(screen => {

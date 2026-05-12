@@ -162,6 +162,48 @@ button:active {
   margin-top: 0.5rem;
 }
 
+.hidden {
+  display: none;
+}
+
+.p1-color {
+  color: #4ade80;
+}
+
+.p2-color {
+  color: #60a5fa;
+}
+
+.winner-text {
+  font-size: 2em;
+  font-weight: 700;
+  color: #fbbf24;
+}
+
+.bot-selections {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.menu-buttons {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.final-scores-two {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.final-scores-two.hidden {
+  display: none;
+}
+
 @media (max-width: 768px) {
   h1 {
     font-size: 2em;
