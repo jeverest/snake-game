@@ -29,6 +29,44 @@ h1 {
   color: #4ade80;
 }
 
+.menu-hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+.menu-demo-canvas {
+  display: block;
+  filter: drop-shadow(0 10px 30px rgba(74, 222, 128, 0.15));
+  -webkit-mask-image: radial-gradient(ellipse 75% 80% at 50% 55%, #000 60%, transparent 100%);
+  mask-image: radial-gradient(ellipse 75% 80% at 50% 55%, #000 60%, transparent 100%);
+}
+
+.menu-hero-overlay {
+  margin-top: -0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.menu-title {
+  font-size: 3.5em;
+  margin: 0;
+  letter-spacing: 0.04em;
+  text-shadow: 0 0 24px rgba(74, 222, 128, 0.35);
+}
+
+.menu-tagline {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 #app {
   max-width: 1280px;
   margin: 0 auto;
@@ -180,18 +218,154 @@ button:active {
   color: #fbbf24;
 }
 
-.bot-selections {
-  display: flex;
-  gap: 2rem;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
 .menu-buttons {
   display: flex;
-  gap: 1rem;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: stretch;
+  width: 100%;
+  max-width: 320px;
+}
+
+.menu-buttons button {
+  width: 100%;
+  padding: 0.85em 1.5em;
+  font-size: 1.05em;
+}
+
+.menu-buttons button#new-game {
+  font-size: 1.2em;
+  padding: 1em 1.5em;
+  box-shadow: 0 4px 20px rgba(74, 222, 128, 0.2);
+}
+
+.expand-control {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.expand-control > button {
+  width: 100%;
+}
+
+.expand-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid #64748b;
+  border-radius: 10px;
+  background-color: rgba(100, 116, 139, 0.08);
+  animation: expand-panel-fade 180ms ease-out;
+}
+
+.expand-panel.hidden {
+  display: none;
+}
+
+.expand-panel-title {
+  color: #cbd5e1;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+}
+
+.expand-panel-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  align-items: stretch;
+  text-align: left;
+}
+
+.expand-panel-row label {
+  color: #94a3b8;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.expand-panel-row select {
+  width: 100%;
+  min-width: 0;
+  border-radius: 8px;
+  border: 1px solid #475569;
+  background-color: #0f172a;
+  color: #f1f5f9;
+  font-size: 0.95rem;
+  padding: 0.5rem 0.6rem;
+}
+
+.expand-panel-row .bot-description {
+  font-size: 0.78rem;
+  max-width: none;
+}
+
+.expand-panel-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.expand-panel-actions button {
+  flex: 1;
+  padding: 0.7em 1em;
+  font-size: 0.95em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+@keyframes expand-panel-fade {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.menu-footer {
+  display: flex;
   flex-wrap: wrap;
+  align-items: center;
   justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+button.footer-link,
+a.footer-link {
+  background: none;
+  border: none;
+  padding: 0.2rem 0.4rem;
+  margin: 0;
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  text-decoration: none;
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: color 0.15s, background-color 0.15s, transform 0.15s;
+}
+
+button.footer-link:hover,
+a.footer-link:hover {
+  color: #4ade80;
+  background: none;
+  transform: none;
+}
+
+button.footer-link:active {
+  transform: none;
+}
+
+.footer-sep {
+  color: #475569;
+  user-select: none;
 }
 
 .final-scores-two {
@@ -359,6 +533,14 @@ button:active {
 @media (max-width: 768px) {
   h1 {
     font-size: 2em;
+  }
+
+  .menu-title {
+    font-size: 2.4em;
+  }
+
+  .menu-tagline {
+    font-size: 0.8rem;
   }
 
   .game-info {

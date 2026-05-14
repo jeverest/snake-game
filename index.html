@@ -9,26 +9,57 @@
   <body>
     <div id="app">
       <div id="menu" class="screen">
-        <h1>Snake Game</h1>
-        <div class="high-score">High Score: <span id="high-score">0</span></div>
-        <div class="bot-selections">
-          <div class="bot-selection">
-            <label for="menu-bot-select">Bot 1</label>
-            <select id="menu-bot-select"></select>
-            <div id="menu-bot-description" class="bot-description"></div>
-          </div>
-          <div class="bot-selection">
-            <label for="menu-bot2-select">Bot 2</label>
-            <select id="menu-bot2-select"></select>
-            <div id="menu-bot2-description" class="bot-description"></div>
+        <div class="menu-hero">
+          <canvas id="menu-demo-canvas" class="menu-demo-canvas"></canvas>
+          <div class="menu-hero-overlay">
+            <h1 class="menu-title">Snake Game</h1>
+            <div class="menu-tagline">Isometric. Rotating. Slightly hypnotic.</div>
           </div>
         </div>
+        <div class="high-score">High Score: <span id="high-score">0</span></div>
         <div class="menu-buttons">
           <button id="new-game">New Game</button>
           <button id="two-player">Two Player</button>
-          <button id="bot-vs-bot" class="secondary-button">Bot vs Bot</button>
-          <button id="start-demo" class="secondary-button">Start Demo Bot</button>
-          <button id="open-leaderboards" class="secondary-button">Leaderboards</button>
+          <div id="demo-control" class="expand-control">
+            <button id="start-demo" class="secondary-button">Solo Bot</button>
+            <div id="demo-panel" class="expand-panel hidden">
+              <div class="expand-panel-title">Pick a Demo Bot</div>
+              <div class="expand-panel-row">
+                <label for="demo-bot-select">Bot</label>
+                <select id="demo-bot-select"></select>
+                <div id="demo-bot-description" class="bot-description"></div>
+              </div>
+              <div class="expand-panel-actions">
+                <button id="demo-cancel" class="secondary-button">Cancel</button>
+                <button id="demo-launch">Launch</button>
+              </div>
+            </div>
+          </div>
+          <div id="bvb-control" class="expand-control">
+            <button id="bot-vs-bot" class="secondary-button">Bot vs Bot</button>
+            <div id="bvb-panel" class="expand-panel hidden">
+              <div class="expand-panel-title">Pick Your Bots</div>
+              <div class="expand-panel-row">
+                <label for="bvb-bot1-select">Bot 1</label>
+                <select id="bvb-bot1-select"></select>
+                <div id="bvb-bot1-description" class="bot-description"></div>
+              </div>
+              <div class="expand-panel-row">
+                <label for="bvb-bot2-select">Bot 2</label>
+                <select id="bvb-bot2-select"></select>
+                <div id="bvb-bot2-description" class="bot-description"></div>
+              </div>
+              <div class="expand-panel-actions">
+                <button id="bvb-cancel" class="secondary-button">Cancel</button>
+                <button id="bvb-launch">Launch</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="menu-footer">
+          <button id="open-leaderboards" class="footer-link">Leaderboards</button>
+          <span class="footer-sep" aria-hidden="true">·</span>
+          <a class="footer-link" href="https://github.com/jeverest/snake-game" target="_blank" rel="noopener noreferrer">GitHub</a>
         </div>
       </div>
       <div id="leaderboards" class="screen hidden">
