@@ -11,6 +11,7 @@ import {
   MODE_LABELS
 } from './leaderboard'
 import type { LeaderboardEntry, LeaderboardMode, GameResult } from './leaderboard'
+import { MenuDemo } from './menu-demo'
 
 type GameMode = 'single' | 'pvp' | 'bvb'
 
@@ -115,6 +116,9 @@ class SnakeGame {
   private autoRotateSpeed: number = 0.15 // radians per second
   private autoRotatePausedUntil: number = 0 // timestamp when manual override expires
 
+  // Menu demo (small rotating snake on the start screen)
+  private menuDemo: MenuDemo | null = null
+
   constructor() {
     this.canvas = document.getElementById('canvas') as HTMLCanvasElement
     this.ctx = this.canvas.getContext('2d')!
@@ -122,7 +126,16 @@ class SnakeGame {
     this.loadHighScore()
     this.setupEventListeners()
     this.updateBotUI()
+    this.initMenuDemo()
     window.addEventListener('resize', () => { this.updateCanvasSize(); this.draw() })
+  }
+
+  private initMenuDemo() {
+    const demoCanvas = document.getElementById('menu-demo-canvas') as HTMLCanvasElement | null
+    if (!demoCanvas) return
+    this.menuDemo = new MenuDemo(demoCanvas)
+    // Menu is the initial screen — start the demo right away.
+    this.menuDemo.start()
   }
 
   private isTwoSnakeMode(): boolean {
@@ -468,8 +481,26 @@ class SnakeGame {
     this.setupBotSelectors()
     document.getElementById('new-game')!.addEventListener('click', () => this.startNewGame('single'))
     document.getElementById('two-player')!.addEventListener('click', () => this.startNewGame('pvp'))
-    document.getElementById('bot-vs-bot')!.addEventListener('click', () => this.startNewGame('bvb'))
+    document.getElementById('bot-vs-bot')!.addEventListener('click', () => {
+      this.closeAllExpandPanels()
+      this.setExpandPanel('bot-vs-bot', 'bvb-panel', true)
+    })
+    document.getElementById('bvb-cancel')!.addEventListener('click', () => {
+      this.setExpandPanel('bot-vs-bot', 'bvb-panel', false)
+    })
+    document.getElementById('bvb-launch')!.addEventListener('click', () => {
+      this.setExpandPanel('bot-vs-bot', 'bvb-panel', false)
+      this.startNewGame('bvb')
+    })
     document.getElementById('start-demo')!.addEventListener('click', () => {
+      this.closeAllExpandPanels()
+      this.setExpandPanel('start-demo', 'demo-panel', true)
+    })
+    document.getElementById('demo-cancel')!.addEventListener('click', () => {
+      this.setExpandPanel('start-demo', 'demo-panel', false)
+    })
+    document.getElementById('demo-launch')!.addEventListener('click', () => {
+      this.setExpandPanel('start-demo', 'demo-panel', false)
       this.botEnabled = true
       this.startNewGame('single')
     })
@@ -512,10 +543,11 @@ class SnakeGame {
   }
 
   private setupBotSelectors() {
-    // Bot 1 selectors (menu + game screen)
-    const menuSelect = document.getElementById('menu-bot-select') as HTMLSelectElement | null
+    // Bot 1 selectors (game screen, BvB expand panel, Demo expand panel)
     const gameSelect = document.getElementById('game-bot-select') as HTMLSelectElement | null
-    this.botSelectors = [menuSelect, gameSelect].filter((select): select is HTMLSelectElement => select !== null)
+    const bvbBot1Select = document.getElementById('bvb-bot1-select') as HTMLSelectElement | null
+    const demoBotSelect = document.getElementById('demo-bot-select') as HTMLSelectElement | null
+    this.botSelectors = [gameSelect, bvbBot1Select, demoBotSelect].filter((select): select is HTMLSelectElement => select !== null)
 
     for (const select of this.botSelectors) {
       select.innerHTML = ''
@@ -531,9 +563,9 @@ class SnakeGame {
       })
     }
 
-    // Bot 2 selector (menu only)
-    const menuBot2Select = document.getElementById('menu-bot2-select') as HTMLSelectElement | null
-    this.botSelectors2 = [menuBot2Select].filter((select): select is HTMLSelectElement => select !== null)
+    // Bot 2 selector (BvB expand panel)
+    const bvbBot2Select = document.getElementById('bvb-bot2-select') as HTMLSelectElement | null
+    this.botSelectors2 = [bvbBot2Select].filter((select): select is HTMLSelectElement => select !== null)
 
     for (const select of this.botSelectors2) {
       select.innerHTML = ''
@@ -770,18 +802,25 @@ class SnakeGame {
   }
 
   private updateBotDescriptions() {
-    const menuDescription = document.getElementById('menu-bot-description')
-    const gameDescription = document.getElementById('game-bot-description')
-    if (menuDescription) {
-      menuDescription.textContent = this.activeBot.description
+    const bot1Ids = ['game-bot-description', 'bvb-bot1-description', 'demo-bot-description']
+    for (const id of bot1Ids) {
+      const el = document.getElementById(id)
+      if (el) el.textContent = this.activeBot.description
     }
-    if (gameDescription) {
-      gameDescription.textContent = this.activeBot.description
-    }
-    const menuBot2Description = document.getElementById('menu-bot2-description')
-    if (menuBot2Description) {
-      menuBot2Description.textContent = this.activeBot2.description
-    }
+    const el2 = document.getElementById('bvb-bot2-description')
+    if (el2) el2.textContent = this.activeBot2.description
+  }
+
+  private setExpandPanel(buttonId: string, panelId: string, open: boolean) {
+    const button = document.getElementById(buttonId)!
+    const panel = document.getElementById(panelId)!
+    button.classList.toggle('hidden', open)
+    panel.classList.toggle('hidden', !open)
+  }
+
+  private closeAllExpandPanels() {
+    this.setExpandPanel('bot-vs-bot', 'bvb-panel', false)
+    this.setExpandPanel('start-demo', 'demo-panel', false)
   }
 
   private updateBotUI() {
@@ -794,7 +833,7 @@ class SnakeGame {
     status.classList.toggle('on', this.botEnabled)
     status.classList.toggle('off', !this.botEnabled)
     toggle.textContent = this.botEnabled ? `Disable Bot (B)` : `Enable Bot (B)`
-    demoButton.textContent = this.botEnabled ? `Demo Bot Enabled (${this.activeBot.name})` : `Start Demo Bot (${this.activeBot.name})`
+    demoButton.textContent = 'Solo Bot'
   }
 
   // === Game loop ===
@@ -1554,6 +1593,11 @@ class SnakeGame {
       screen.classList.add('hidden')
     })
     document.getElementById(screenId)!.classList.remove('hidden')
+    if (this.menuDemo) {
+      if (screenId === 'menu') this.menuDemo.start()
+      else this.menuDemo.stop()
+    }
+    if (screenId !== 'menu') this.closeAllExpandPanels()
   }
 
   private getHighScore(): number {
