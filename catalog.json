@@ -1484,6 +1484,20 @@
 					]
 				}
 			]
+		},
+		{
+			"commitHash": "e9bc8817553d30a5c84dfb7410897c51372d03d6",
+			"topics": [
+				{
+					"title": "Add link from main README to Jolli Memory viewing guide",
+					"decisions": "The link was added to the same branch as the guide itself so that both the guide and its entry point would ship together in a single pull request, keeping the repository in a consistent state at every commit.",
+					"category": "docs",
+					"importance": "minor",
+					"filesAffected": [
+						"README.md"
+					]
+				}
+			]
 		}
 	]
 }

@@ -1,0 +1,109 @@
+{
+	"version": 1,
+	"commitHash": "e9bc8817553d30a5c84dfb7410897c51372d03d6",
+	"commitMessage": "Link to the Jolli Memory guide from the main README",
+	"commitDate": "2026-07-09T23:29:18.000Z",
+	"planSlug": "README-JOLLI-MEMORY-e9bc8817",
+	"originalSlug": "README-JOLLI-MEMORY",
+	"summary": "The developer added a 'Project memory' section to the main README.md linking to the Jolli Memory viewing guide, so that repo visitors would discover the guide. This was the final step to make the guide and its entry point ship together in a single PR on the docs/jolli-memory-guide branch.",
+	"steps": [
+		{
+			"id": "1",
+			"description": "Clone (or fork) the repo",
+			"status": "not_started",
+			"note": null
+		},
+		{
+			"id": "2",
+			"description": "Put the Jolli Memory orphan branch in place",
+			"status": "not_started",
+			"note": null
+		},
+		{
+			"id": "3",
+			"description": "Install the Jolli CLI",
+			"status": "not_started",
+			"note": null
+		},
+		{
+			"id": "4",
+			"description": "Sign in",
+			"status": "not_started",
+			"note": null
+		},
+		{
+			"id": "5",
+			"description": "Enable Jolli Memory in the repo",
+			"status": "not_started",
+			"note": null
+		},
+		{
+			"id": "6",
+			"description": "Install the VS Code extension",
+			"status": "not_started",
+			"note": null
+		},
+		{
+			"id": "7",
+			"description": "View the memories",
+			"status": "not_started",
+			"note": null
+		},
+		{
+			"id": "next-1",
+			"description": "Look at a memory",
+			"status": "not_started",
+			"note": null
+		},
+		{
+			"id": "next-2",
+			"description": "Build the Knowledge Wiki",
+			"status": "not_started",
+			"note": null
+		},
+		{
+			"id": "next-2a",
+			"description": "Create and set a Memory Bank folder",
+			"status": "not_started",
+			"note": null
+		},
+		{
+			"id": "next-2b",
+			"description": "Give it a model",
+			"status": "not_started",
+			"note": null
+		},
+		{
+			"id": "next-2c",
+			"description": "Build it",
+			"status": "not_started",
+			"note": null
+		},
+		{
+			"id": "next-3",
+			"description": "View the wiki",
+			"status": "not_started",
+			"note": null
+		},
+		{
+			"id": "next-4",
+			"description": "View the knowledge graph",
+			"status": "not_started",
+			"note": null
+		},
+		{
+			"id": "readme-link",
+			"description": "Add link from main README to Jolli Memory viewing guide",
+			"status": "completed",
+			"note": "The developer added a 'Project memory' section to the root README.md pointing to docs/jolli-memory/README-JOLLI-MEMORY.md. The key decision was to land this change on the same branch as the guide itself (docs/jolli-memory-guide) so both the guide and its entry point would ship atomically in one PR, keeping the repo in a consistent state at every commit. The assistant also flagged 3 Dependabot vulnerabilities (1 high, 1 moderate, 1 low) on the default branch during the push — these were noted but explicitly deferred and may warrant follow-up."
+		}
+	],
+	"llm": {
+		"model": "claude-haiku-4-5-20251001",
+		"inputTokens": 4647,
+		"outputTokens": 881,
+		"apiLatencyMs": 13236,
+		"stopReason": null,
+		"source": "jolli-proxy"
+	}
+}
