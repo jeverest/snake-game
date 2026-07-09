@@ -1335,13 +1335,23 @@
 		},
 		{
 			"commitHash": "39cd827d6568fd3b3de6cc7fb74bfa728fb845e3",
-			"parentCommitHash": null,
+			"parentCommitHash": "96ca49848e5ce24ab4ad704a4eba3ecfe41ce4ea",
 			"treeHash": "078345da17f8538730962b888359564a804ed02e",
 			"commitType": "commit",
 			"commitMessage": "Add Jolli Memory viewing guide with diagrams and screenshots",
 			"commitDate": "2026-07-09T21:48:27.000Z",
 			"branch": "docs/jolli-memory-guide",
-			"generatedAt": "2026-07-09T21:49:24.946Z",
+			"generatedAt": "2026-07-09T21:49:24.946Z"
+		},
+		{
+			"commitHash": "96ca49848e5ce24ab4ad704a4eba3ecfe41ce4ea",
+			"parentCommitHash": null,
+			"treeHash": "7e59cc9cc581dde3c0d663b9b7f5c3de8cbb5a4d",
+			"commitType": "amend",
+			"commitMessage": "Add Jolli Memory viewing guide with diagrams and screenshots",
+			"commitDate": "2026-07-09T21:48:27.000Z",
+			"branch": "docs/jolli-memory-guide",
+			"generatedAt": "2026-07-09T22:03:05.664Z",
 			"topicCount": 1,
 			"diffStats": {
 				"filesChanged": 5,

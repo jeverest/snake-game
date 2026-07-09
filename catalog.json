@@ -1467,7 +1467,7 @@
 			]
 		},
 		{
-			"commitHash": "39cd827d6568fd3b3de6cc7fb74bfa728fb845e3",
+			"commitHash": "96ca49848e5ce24ab4ad704a4eba3ecfe41ce4ea",
 			"recap": "A complete onboarding guide for Jolli Memory was added to the repository, covering everything from cloning the repo and placing the memory branch locally, through installing the CLI and IDE plugin, to building and browsing the knowledge wiki and knowledge graph. The guide handles both VS Code and JetBrains IDEs, documents both the Jolli account and bring-your-own Anthropic key paths for wiki generation, and includes explicit callouts for two failure modes that would otherwise leave a reader stuck with no error message to search for.\n\nFour visual assets accompany the written steps. A hand-authored architecture diagram illustrates the full Commit → Distill → Store → Wiki/Graph pipeline in the tool's dark aesthetic. Three screenshots were generated from the repo's own live data — the actual wiki index and a topic page, the knowledge graph at category overview level, and the graph drilled into the Gameplay Features category showing topic groups, unit cards, and labeled relationship edges. All commands and UI labels in the guide were verified against the installed CLI and extension before being written, catching two incorrect commands that would have failed on first use.",
 			"topics": [
 				{

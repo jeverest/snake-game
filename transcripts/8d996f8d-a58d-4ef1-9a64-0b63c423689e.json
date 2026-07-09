@@ -1,0 +1,21 @@
+{
+	"sessions": [
+		{
+			"sessionId": "b0932354-5f5e-4cde-b7da-240b521cab3c",
+			"source": "claude",
+			"transcriptPath": "/Users/jeverest/.claude/projects/-Users-jeverest-projects-snake-game/b0932354-5f5e-4cde-b7da-240b521cab3c.jsonl",
+			"entries": [
+				{
+					"role": "assistant",
+					"content": "All four links are now correct relative filenames. Now I'm on `main` (the default branch), so I'll branch first, then add the folder and commit.\n\nCommitted. Here's what happened:\n\n**Heads-up first:** before committing I found the doc had been moved out of the repo root into `docs/jolli-memory/` (and the stray `graph/` export folder was gone). I didn't make that move — but since the doc now sits *inside* the images folder, its image links (`docs/jolli-memory/how-it-works.svg`) would have resolved to `docs/jolli-memory/docs/jolli-memory/…` and broken. So I rewrote all four links to bare filenames (`how-it-works.svg`, etc.) relative to the doc's new location, and verified no stale paths remain.\n\n**Branch + commit:**\n- Branched off `main` → **`docs/jolli-memory-guide`**\n- Commit **`39cd827`** — \"Add Jolli Memory viewing guide with diagrams and screenshots\"\n- Five files, exactly what you asked (nothing stray):\n  - `docs/jolli-memory/README-JOLLI-MEMORY.md`\n  - `docs/jolli-memory/how-it-works.svg`\n  - `docs/jolli-memory/knowledge-graph-overview.png`\n  - `docs/jolli-memory/knowledge-graph-topics.png`\n  - `docs/jolli-memory/knowledge-wiki.png`\n\nWorking tree is clean. Note: the Jolli post-commit hook likely kicked off an async summary for this commit — normal for this repo.\n\nI didn't push or open a PR since you didn't ask. Want me to push `docs/jolli-memory-guide` and open a PR? Since Jolli Memory is enabled here, I'd use the **jolli-pr** skill to generate the PR description from memory.",
+					"timestamp": "2026-07-09T21:48:21.766Z"
+				},
+				{
+					"role": "human",
+					"content": "I fixed the links.  can you amment the commit?",
+					"timestamp": "2026-07-09T22:02:46.123Z"
+				}
+			]
+		}
+	]
+}

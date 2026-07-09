@@ -1,0 +1,139 @@
+{
+	"version": 5,
+	"commitHash": "96ca49848e5ce24ab4ad704a4eba3ecfe41ce4ea",
+	"commitMessage": "Add Jolli Memory viewing guide with diagrams and screenshots",
+	"commitAuthor": "Joe Hart",
+	"commitDate": "2026-07-09T21:48:27.000Z",
+	"branch": "docs/jolli-memory-guide",
+	"generatedAt": "2026-07-09T22:03:05.664Z",
+	"commitType": "amend",
+	"commitSource": "cli",
+	"transcriptEntries": 2,
+	"conversationTurns": 1,
+	"conversationTokens": 18386,
+	"conversationTokenBreakdown": {
+		"input": 7547,
+		"output": 4877,
+		"cached": 5962
+	},
+	"plans": [
+		{
+			"slug": "README-JOLLI-MEMORY-39cd827d",
+			"title": "Viewing Jolli Memory for the Snake Game repo",
+			"addedAt": "2026-07-09T21:48:41.242Z",
+			"updatedAt": "2026-07-09T21:48:55.150Z"
+		}
+	],
+	"references": [
+		{
+			"archivedKey": "notion:3914fc101d348090a433da4566d0144e-39cd827d",
+			"source": "notion",
+			"nativeId": "3914fc101d348090a433da4566d0144e",
+			"title": "Snake Game Customer Requests",
+			"url": "https://app.notion.com/p/3914fc101d348090a433da4566d0144e",
+			"fields": [
+				{
+					"key": "entity-type",
+					"label": "Type",
+					"value": "page",
+					"icon": "symbol-class"
+				}
+			],
+			"referencedAt": "2026-07-07T18:10:38.710Z",
+			"sourceToolName": "mcp__claude_ai_Notion__notion-fetch"
+		},
+		{
+			"archivedKey": "linear:JOE-9-39cd827d",
+			"source": "linear",
+			"nativeId": "JOE-9",
+			"title": "Add Exit",
+			"url": "https://linear.app/joesthewizardworkspace/issue/JOE-9/add-exit",
+			"fields": [
+				{
+					"key": "status",
+					"label": "Status",
+					"value": "Backlog",
+					"icon": "circle-large-filled"
+				},
+				{
+					"key": "priority",
+					"label": "Priority",
+					"value": "No priority",
+					"icon": "flame"
+				}
+			],
+			"referencedAt": "2026-07-07T18:28:15.805Z",
+			"sourceToolName": "mcp__claude_ai_Linear__get_issue"
+		}
+	],
+	"topics": [
+		{
+			"title": "Jolli Memory viewing guide with diagrams and screenshots added",
+			"trigger": "The project needed a complete onboarding guide so that anyone cloning the snake-game repo could set up Jolli Memory, view stored memories in their IDE, build a knowledge wiki, and explore the knowledge graph — all from a single document.",
+			"response": "- Created `docs/jolli-memory/README-JOLLI-MEMORY.md` as a full step-by-step guide covering cloning, orphan branch setup, CLI install, sign-in, enabling Jolli Memory, IDE plugin installation (VS Code and JetBrains), and a \"What to do next\" section covering memory browsing, wiki generation, and graph viewing. All commands were verified against the installed CLI (v0.99.6) and the VS Code extension's actual UI strings before being written — notably `jolli auth login` (not bare `jolli auth`), and `jolli graph --export <dir>` (not `jolli graph --open` alone, which errors).\n- Created `docs/jolli-memory/how-it-works.svg`, a hand-authored dark-theme architecture diagram illustrating the Commit → Distill → Store → Wiki/Graph pipeline, styled to match the tool's branding and verified to render correctly on GitHub's light background.\n- Generated three supporting screenshots using Playwright against real repo data: `knowledge-wiki.png` (the actual wiki index and a topic page rendered from live Markdown), `knowledge-graph-overview.png` (the real exported graph at category level), and `knowledge-graph-topics.png` (drilled into Gameplay Features showing topic groups, unit cards, and labeled edges). All images were content-cropped and placed alongside the guide in `docs/jolli-memory/`.",
+			"decisions": "- **Verify before documenting**: Every CLI command and IDE label was checked against the installed CLI and extension source before being written into the guide. This caught two bugs in the draft — bare `jolli auth` (not a runnable command; the real sign-in is `jolli auth login`) and `jolli graph --open` (errors without `--export`; the flag is a modifier, not a standalone action). Writing from memory or guessing would have shipped a guide that fails on first use.\n- **Use real data for screenshots rather than mockups**: The graph and wiki images were generated from the repo's actual exported graph HTML and live wiki Markdown, using the project's already-installed Playwright/Chromium. This keeps the screenshots honest and automatically representative of the real tool output, at the cost of a more complex generation process (navigating the graph's async ELK layout, driving category drill-down via internal state rather than simulated clicks).\n- **Surface two accuracy gotchas as explicit notes**: \"Build Knowledge Wiki\" silently aborts without a configured Memory Bank folder, and \"View Knowledge Graph\" is hidden from the Command Palette (panel-only). Both were confirmed in the extension source. Rather than omitting them, the guide calls them out with fixes inline and in the troubleshooting table — a reader who hits either failure has a path forward without needing to search.",
+			"filesAffected": [
+				"docs/jolli-memory/README-JOLLI-MEMORY.md",
+				"docs/jolli-memory/how-it-works.svg",
+				"docs/jolli-memory/knowledge-wiki.png",
+				"docs/jolli-memory/knowledge-graph-overview.png",
+				"docs/jolli-memory/knowledge-graph-topics.png"
+			],
+			"category": "docs",
+			"importance": "major"
+		}
+	],
+	"recap": "A complete onboarding guide for Jolli Memory was added to the repository, covering everything from cloning the repo and placing the memory branch locally, through installing the CLI and IDE plugin, to building and browsing the knowledge wiki and knowledge graph. The guide handles both VS Code and JetBrains IDEs, documents both the Jolli account and bring-your-own Anthropic key paths for wiki generation, and includes explicit callouts for two failure modes that would otherwise leave a reader stuck with no error message to search for.\n\nFour visual assets accompany the written steps. A hand-authored architecture diagram illustrates the full Commit → Distill → Store → Wiki/Graph pipeline in the tool's dark aesthetic. Three screenshots were generated from the repo's own live data — the actual wiki index and a topic page, the knowledge graph at category overview level, and the graph drilled into the Gameplay Features category showing topic groups, unit cards, and labeled relationship edges. All commands and UI labels in the guide were verified against the installed CLI and extension before being written, catching two incorrect commands that would have failed on first use.",
+	"transcripts": [
+		"529cb69c-1bf4-4ea5-b829-48f0f87e54b7",
+		"8d996f8d-a58d-4ef1-9a64-0b63c423689e"
+	],
+	"diffStats": {
+		"filesChanged": 5,
+		"insertions": 320,
+		"deletions": 0
+	},
+	"children": [
+		{
+			"version": 5,
+			"commitHash": "39cd827d6568fd3b3de6cc7fb74bfa728fb845e3",
+			"commitMessage": "Add Jolli Memory viewing guide with diagrams and screenshots",
+			"commitAuthor": "Joe Hart",
+			"commitDate": "2026-07-09T21:48:27.000Z",
+			"branch": "docs/jolli-memory-guide",
+			"generatedAt": "2026-07-09T21:49:24.946Z",
+			"commitType": "commit",
+			"commitSource": "cli",
+			"transcriptEntries": 34,
+			"conversationTurns": 17,
+			"llm": {
+				"model": "claude-sonnet-4-6",
+				"inputTokens": 18309,
+				"outputTokens": 1061,
+				"cachedTokens": 0,
+				"apiLatencyMs": 27467,
+				"stopReason": null,
+				"source": "jolli-proxy"
+			},
+			"stats": {
+				"filesChanged": 5,
+				"insertions": 320,
+				"deletions": 0
+			},
+			"conversationTokens": 1000134,
+			"conversationTokenBreakdown": {
+				"input": 54161,
+				"output": 345639,
+				"cached": 600334
+			},
+			"diffStats": {
+				"filesChanged": 5,
+				"insertions": 320,
+				"deletions": 0
+			},
+			"transcripts": [
+				"529cb69c-1bf4-4ea5-b829-48f0f87e54b7"
+			]
+		}
+	]
+}
