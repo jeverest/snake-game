@@ -114,13 +114,14 @@
 		{
 			"stableSlug": "project-docs",
 			"title": "Project Documentation & README",
-			"summary": "README.md is the single authoritative doc; CLAUDE.md guides AI agents; README links to the Jolli Memory guide in docs/.",
+			"summary": "README.md is the single authoritative doc; CLAUDE.md guides AI agents; Jolli Memory guide is linked from the main README.",
 			"relatedBranches": [
 				"docs/cleanup",
 				"docs/claude-md-jolli-memory",
 				"josephhart/joe-7-add-rainbow-colored-snake-suprise",
 				"backfilled",
-				"docs/jolli-memory-guide"
+				"docs/jolli-memory-guide",
+				"docs/readme-link-jolli-guide"
 			],
 			"sourceRefs": [
 				{
@@ -188,9 +189,15 @@
 					"id": "e9bc8817553d30a5c84dfb7410897c51372d03d6",
 					"timestamp": "2026-07-09T23:29:18.000Z",
 					"branch": "docs/jolli-memory-guide"
+				},
+				{
+					"type": "summary",
+					"id": "74ed7bd38d1d1ddf20b77505b90beaab7f03f2f2",
+					"timestamp": "2026-07-09T23:29:18.000Z",
+					"branch": "docs/readme-link-jolli-guide"
 				}
 			],
-			"lastUpdatedAt": "2026-07-09T23:29:37.766Z"
+			"lastUpdatedAt": "2026-07-09T23:37:42.013Z"
 		},
 		{
 			"stableSlug": "dev-tooling-config",
