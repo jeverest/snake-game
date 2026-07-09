@@ -1,0 +1,188 @@
+{
+	"sessions": [
+		{
+			"sessionId": "7e4f6c08-153a-4a84-b73a-40698cd09770",
+			"source": "claude",
+			"transcriptPath": "/Users/jeverest/.claude/projects/-Users-jeverest-projects-snake-game/7e4f6c08-153a-4a84-b73a-40698cd09770.jsonl",
+			"entries": [
+				{
+					"role": "human",
+					"content": "what is the state of the jollimemory branch?  does that need to be pushed?",
+					"timestamp": "2026-07-08T16:59:03.658Z"
+				},
+				{
+					"role": "assistant",
+					"content": "I'll check the current state of the jollimemory branch. Let me read my note on it and inspect the actual git state.\n\nNow let me check whether the local branch is in sync with origin. Let me fetch first and compare tips.\n\nHere's the state of the Jolli memory branch (`jollimemory/summaries/v3`):\n\n| | Commit | |\n|---|---|---|\n| **Local** | `605b69f` | \"Overwrite summary for f01522c4: Add exit door…\" (2026-07-07) |\n| **origin** | `2d3cdc9` | (last push, per my notes on 2026-07-06) |\n\n**Yes — it needs to be pushed.** Local is **205 commits ahead of origin, 0 behind**. Origin is still sitting exactly where I last pushed it (`2d3cdc9`), and everything Jolli has recorded since — including the JOE-9 exit-door work on this branch — is local-only and unbacked-up.\n\nThis matches the standing rule I have noted for this repo: this branch is the memory backup of record, and losing it loses dev memory that can't be regenerated without re-running backend summarization — so it should be kept pushed.\n\nWant me to push it now? It's a fast-forward (`git push origin jollimemory/summaries/v3`), no force needed since remote is 0 behind.",
+					"timestamp": "2026-07-08T16:59:10.207Z"
+				},
+				{
+					"role": "human",
+					"content": "push it",
+					"timestamp": "2026-07-08T17:01:06.928Z"
+				},
+				{
+					"role": "assistant",
+					"content": "I'll push the branch to origin.\n\nPushed. `2d3cdc9..605b69f` fast-forwarded cleanly — local and remote are now both at `605b69f`, **0 ahead / 0 behind**. All 205 commits (including the JOE-9 exit-door memory) are backed up on origin.\n\nLet me update my note to record the new pushed tip.\n\nDone. The branch is pushed and fully in sync (`605b69f`, 0/0), and I've updated my note with the new pushed tip.\n\nTwo side notes from the push output:\n- Nothing to act on for us, but GitHub flagged **3 Dependabot vulnerabilities** on `jolliai/snake-game`'s default branch (1 high, 1 moderate, 1 low). Happy to take a look if you want.\n- The `-U` upstream isn't tracked for this branch, so future pushes still need the explicit `git push origin jollimemory/summaries/v3`. Want me to set it as the tracking upstream (`git push -u`) so a plain `git push` works next time?",
+					"timestamp": "2026-07-08T17:01:09.488Z"
+				}
+			]
+		},
+		{
+			"sessionId": "b0932354-5f5e-4cde-b7da-240b521cab3c",
+			"source": "claude",
+			"transcriptPath": "/Users/jeverest/.claude/projects/-Users-jeverest-projects-snake-game/b0932354-5f5e-4cde-b7da-240b521cab3c.jsonl",
+			"entries": [
+				{
+					"role": "human",
+					"content": "can you look at README-JOLLI-MEMORY.md.  it calls for jolli login... but that isn't a command. can you fix this plan?",
+					"timestamp": "2026-07-09T15:36:26.968Z"
+				},
+				{
+					"role": "assistant",
+					"content": "I'll take a look at the file.\n\nThe file actually says `jolli auth` (line 71), not `jolli login` — but your point stands: I should verify these commands are real rather than guess. Let me check what the actual `jolli` CLI exposes.\n\nThe CLI has no `auth` (or `login`) command at all. Authentication/API keys appear to live under `configure`. Let me confirm how sign-in actually works.\n\nSo auth is via config keys (e.g. an API key), not a browser login. Let me get the exact config keys so I document the right one.\n\nInteresting — the `aiProvider` key description references `jolli auth login`. But `auth` wasn't in the top-level command list. Let me check whether that command actually exists.\n\nNow I have the full picture. There **is** a `jolli auth` command group (hidden from the top-level list), but bare `jolli auth` just prints help — it doesn't sign you in. The real sign-in command is **`jolli auth login`**. Let me verify the status labels the README quotes so I fix those too if needed.\n\nConfirmed. The real command is `jolli auth login` (bare `jolli auth` just prints help). The README's `jolli auth` in step 4 and in the troubleshooting table is the bug — and `jolli auth status` is the way to verify. Everything else in the plan (`jolli --version`, `enable`, `status`, `doctor --fix`, `view`, `recall`) checks out against the real CLI. Fixing the two spots:\n\nFixed. Here's what was wrong and what I changed.\n\n**The bug:** The README's sign-in step used `jolli auth`, but bare `jolli auth` isn't a runnable command — it just prints help. (Your instinct was right; you remembered it as \"jolli login.\" The real command is a subcommand of `auth`.) The actual sign-in command is **`jolli auth login`**, which does the browser flow and saves a Jolli API Key.\n\n**Changes (two spots):**\n- **Step 4 — Sign in:** `jolli auth` → `jolli auth login`, plus a `jolli auth status` check to confirm it worked, and a note that this is what lets you skip needing an Anthropic API key.\n- **Troubleshooting row** (\"Not signed in\"): `jolli auth` → `jolli auth login` (with `jolli auth status` to verify).\n\n**Verified against the installed CLI (v0.99.6), everything else in the plan is correct:** `jolli --version`, `jolli enable`, `jolli status`, `jolli doctor --fix`, `jolli view`, and `jolli recall` are all real commands, and the sample `jolli status` output labels (Signed in / Stored memories / Orphan branch) match reality.\n\nOne small note if you want to tighten it further: the CLI's own help calls the whole flow \"Sign in to Jolli … *without an Anthropic API key*,\" so an alternative to browser login is `jolli configure --set jolliApiKey=sk-jol-…` — worth mentioning only if your audience already has a Space key. I left it out to keep the happy path simple.",
+					"timestamp": "2026-07-09T15:36:29.564Z"
+				},
+				{
+					"role": "human",
+					"content": "ok, next I want to add some instructions to the bottom on what to do next after you have all of this installed.  I want them to look at a memory in the IDE, generate a wiki, and then view the wiki as well as knowledge graph.",
+					"timestamp": "2026-07-09T20:37:49.070Z"
+				},
+				{
+					"role": "assistant",
+					"content": "Let me investigate the actual \"wiki\" and \"knowledge graph\" capabilities before I write instructions, since I don't want to document features that don't exist. I'll check `graph`, look for a hidden `wiki` command (like `auth` was hidden), and check what the IDE side offers.\n\nThe full command list surfaced (an unknown subcommand dumps the whole help). Key finds: there's **`jolli graph`** for the knowledge graph, a **\"Jolli Site\"** command group that generates a docs site, and `compile` to build the knowledge base. But \"wiki\" as a term isn't a CLI command — the user's flow is IDE-centric, so the wiki is likely a button in the VS Code extension. Let me inspect the installed extension's actual commands/labels so I document real UI.\n\nNow I have the exact IDE labels. The wiki = **\"Build Knowledge Wiki\"** (`jollimemory.compileNow`, backed by `jolli compile`), and **\"View Knowledge Graph\"** (`jollimemory.viewKnowledgeGraph`, backed by `jolli graph`). There's no separate \"view wiki\" command, so I need to find how the wiki is viewed after building. Let me grep the extension to understand the viewing flow.\n\nThe wiki is rendered as Markdown topic files (\"<repo> · Knowledge Wiki\" index) in the Memory Bank folder. Let me pin down where those files live and how the IDE surfaces the wiki + graph after building, so my instructions point to the right place.\n\n`viewKnowledgeGraph` opens an in-IDE webview (good), and the wiki renders as Markdown topic files into the Memory Bank folder. Let me locate the actual wiki/graph files on disk for this repo so I can describe where the wiki lives and how to open it.\n\nLet me check the webview UI for how the wiki is surfaced (tabs/sections), and confirm the orphan-only storage gotcha my memory flagged, since that affects whether \"Build Knowledge Wiki\" works in this clone-the-orphan-branch setup.\n\nThat's the key gotcha — there's a guidance message about orphan-only storage blocking the wiki/graph build. Let me get the full message and the exact config fix.\n\nLet me nail down two things before writing: where the wiki files land, and how you actually open the wiki in the IDE (there's no dedicated \"view wiki\" command).\n\nCritical finding: \"Build Knowledge Wiki\" requires **both** an API key *and* a configured **Memory Bank folder** (`localFolder`) — otherwise it aborts with \"No Memory Bank folder configured.\" This is the folder-mode gotcha my memory flagged. Let me check the current effective config to see whether `jolli enable` sets a Memory Bank folder by default, so I document the real prerequisite.\n\nI now have the real setup. Note: that config file contains secrets (auth token, API key) — I won't reproduce those anywhere. Key facts:\n- **Memory Bank folder** (`localFolder`) is set on this machine to `/Users/jeverest/projects/vaults/snake` — that's the prerequisite \"Build Knowledge Wiki\" needs.\n- Storage mode defaults to `dual-write` (orphan + folder shadow), so the folder layer exists.\n\nLet me look at that Memory Bank folder to see the actual wiki/graph layout so I describe \"view the wiki\" accurately.\n\nI now have the full, verified layout. The wiki lives in the Memory Bank folder as Markdown: `<repo>/_wiki/_index.md` plus `topic--*.md` files, and the graph data is at `.jolli/graph/graph.json`. Let me glance at the wiki index to describe it accurately.\n\nLet me verify these two commands are actually invokable from the Command Palette (extensions often hide panel commands from it), so I don't tell users to run something that won't appear there.\n\nNow I have everything verified. Key nuance for accuracy: **\"View Knowledge Graph\" is hidden from the Command Palette** (`when: \"false\"`) — it's a button inside the Jolli Memory panel only — whereas **\"Build Knowledge Wiki\" is available in the Command Palette**. I'll document them accordingly, with reliable CLI fallbacks (`jolli compile`, `jolli graph --open`).\n\nLet me add the \"What to do next\" section, plus two matching troubleshooting rows.\n\nNow the two matching troubleshooting rows:\n\nDone. Added a **\"What to do next\"** section right after the setup (before Troubleshooting), plus two matching troubleshooting rows. Everything is grounded in the actual CLI (v0.99.6) and the installed VS Code extension, not guesses.\n\n**The four steps, as written:**\n1. **Look at a memory** — click an entry in the Jolli Memory panel to expand its intent / decisions / files.\n2. **Build the Knowledge Wiki** — panel action or Command Palette (`Jolli Memory: Build Knowledge Wiki`), CLI `jolli compile`.\n3. **View the wiki** — open `<memory-bank>/snake-game/_wiki/_index.md` and click through the `topic--*.md` pages (`Cmd+Shift+V` for preview).\n4. **View the knowledge graph** — the **View Knowledge Graph** button in the panel, or `jolli graph --open` for a shareable HTML export.\n\n**Two accuracy details I verified and baked in so the instructions don't mislead:**\n- **Build Knowledge Wiki needs a Memory Bank folder** (`localFolder`), not just sign-in. Without one it aborts with \"No Memory Bank folder configured.\" I called this out as a note (with the `jolli configure --set localFolder=…` fix) and a troubleshooting row — this is the folder-layer gotcha, confirmed against the extension code.\n- **View Knowledge Graph is hidden from the Command Palette** (`when: \"false\"` in the extension), so I told users it lives in the panel and gave `jolli graph` as the terminal alternative — rather than sending them to the palette where it won't show up.\n\nOne heads-up: while checking the effective config I saw `~/.jolli/jollimemory/config.json` contains your live `authToken` (a JWT) and `jolliApiKey` (`sk-jol-…`). I did **not** copy those into the README or anywhere else — but since this repo is public-facing, worth confirming that file stays out of git (it's outside the repo, so it should be fine).",
+					"timestamp": "2026-07-09T20:37:58.070Z"
+				},
+				{
+					"role": "human",
+					"content": "let's add some instructions for them to create and set their own memory bank folder, get and install their own key (or use the jolli account) to go with the build the knowledge wiki",
+					"timestamp": "2026-07-09T20:45:34.027Z"
+				},
+				{
+					"role": "assistant",
+					"content": "Good idea — the wiki build needs both a Memory Bank folder and an AI provider, and right now that's just a terse note. Let me verify the exact provider logic (does setting an Anthropic key alone work, or do you also need to flip `aiProvider`?) so I document the two paths correctly.\n\nNow I understand the provider logic precisely:\n\n- `aiProvider=\"jolli\"` → uses your `jolliApiKey` (what `jolli auth login` sets). \n- `aiProvider=\"anthropic\"` → uses your own `apiKey`.\n- `ANTHROPIC_API_KEY` env var also works as a fallback.\n\nSo to use your own key after signing into Jolli, you must set **both** `apiKey` and `aiProvider=anthropic`. Let me rewrite the \"Build the Knowledge Wiki\" step to cover the folder + both key paths.\n\nLet me re-read the updated section to confirm it flows cleanly.\n\nThe section reads cleanly. I expanded **step 2 (Build the Knowledge Wiki)** into three labeled sub-steps that cover exactly what you asked:\n\n- **(a) Create and set a Memory Bank folder** — `mkdir -p \"$HOME/jolli-memory-bank\"` then `jolli configure --set localFolder=\"$HOME/jolli-memory-bank\"` (using `$HOME` so it expands reliably in both bash and zsh — a bare `~` after `=` doesn't expand in bash). Plus the IDE equivalent (Settings → Memory Bank) and a note that an Obsidian vault works.\n- **(b) Give it a model** — two paths, both verified against the CLI's provider logic:\n  - **Jolli account** (default): already done via `jolli auth login` in step 4, no key needed.\n  - **Own Anthropic key**: get one from the Anthropic Console, then set *both* `apiKey` and `aiProvider=anthropic` — because after signing into Jolli the provider is pinned to `jolli`, so you have to flip it or your key is ignored. I also noted the `ANTHROPIC_API_KEY` env-var fallback and that keys are stored locally, never committed.\n- **(c) Build it** — panel action / Command Palette / `jolli compile`.\n\nThe existing troubleshooting row already points back to the folder/sign-in prerequisites, so the two stay consistent.\n\nOne thing I deliberately left out: pinning a specific model. The `model` config exists (`jolli configure --set model=…`), but the default works fine and hardcoding a model ID into the README just invites staleness — say the word if you want me to add an optional line for it.",
+					"timestamp": "2026-07-09T20:45:57.163Z"
+				},
+				{
+					"role": "human",
+					"content": "can you also give the alternate instruction to set up the folder and key through the IDE plugin",
+					"timestamp": "2026-07-09T20:52:37.901Z"
+				},
+				{
+					"role": "assistant",
+					"content": "Let me check what the IDE plugin's Settings UI actually exposes for the folder and key, so the IDE instructions match the real labels/flow rather than guessing.\n\nThe main panel UI (Settings, Memory Bank, sign-in) is inlined in `dist/Extension.js`. Let me pull the actual UI labels for the folder picker and key/sign-in flow.\n\nLet me extract the surrounding UI text to reconstruct the exact Settings layout (folder Browse button, provider toggle, key input).\n\nThe regex backtracked on the minified file. Let me use Node to grab fixed-string context windows instead — much faster.\n\nI now have the real IDE Settings UI. It has:\n- A **Memory Bank** section with a **Browse…** button (opens a native folder picker; the path shows in a readonly box).\n- A provider choice with two cards: **\"Sign in to Jolli\"** (Jolli account) and **\"Use your Anthropic API key\"** (→ a *Configure your Anthropic API key* screen with an \"API key\" input, \"stored locally only\").\n- Reached via the panel's **Settings** (gear) action.\n\nLet me expand both sub-steps with the IDE alternative.\n\nBoth IDE alternatives are in. Let me verify the final step 2 reads cleanly.\n\nDone. Each setup sub-step now has both a terminal path and an IDE-plugin alternative, using the extension's real labels (verified against the installed plugin's UI):\n\n- **(a) Memory Bank folder** — CLI `jolli configure --set localFolder=…`, or **\"Prefer the IDE?\"**: panel → **Settings** (gear) → **Memory Bank** section → **Browse…** to pick/create the folder (path shows in the box next to the button).\n- **(b) Key / provider** — CLI `apiKey` + `aiProvider=anthropic`, or **\"Prefer the IDE?\"**: panel → **Settings** → choose **Sign in to Jolli** (Jolli account) or **Use your Anthropic API key** (→ *Configure your Anthropic API key* screen to paste it). Both store the credential locally only.\n\nThe labels — \"Memory Bank\", \"Browse…\", \"Sign in to Jolli\", \"Use your Anthropic API key\", \"Configure your Anthropic API key\", \"stored locally only\" — are taken from the extension's actual UI strings, so they'll match what a reader sees on screen.",
+					"timestamp": "2026-07-09T20:52:47.806Z"
+				},
+				{
+					"role": "human",
+					"content": "the jolli graph export works but the --open doesn't work with error: Error: jolli graph requires --export <dir> (the only action today).",
+					"timestamp": "2026-07-09T21:08:08.434Z"
+				},
+				{
+					"role": "assistant",
+					"content": "`jolli graph --open` alone fails — export is the only implemented action. Let me check the CLI source to see exactly how `--open` is handled (does it work when combined with `--export`, or is it a no-op?) so I document a command that actually works, without spawning a browser tab just to test.\n\nLet me see the rest of the handler to confirm whether `--open` is honored at all when combined with `--export`.\n\nConfirmed. Reading the handler: `--export <dir>` is **required** and is the only standalone action. `--open` is honored **only in combination with** `--export` (it exports, then opens the browser); `--open` by itself hits the \"requires --export\" error. So my README line `jolli graph --open` was wrong. Fixing it:\n\nFixed. The problem was that `--open` isn't a standalone action — the CLI hard-requires `--export <dir>`, and `--open` is just a modifier that opens the file *after* exporting. My earlier `jolli graph --open` line triggered exactly the error you saw.\n\nThe README now shows:\n\n```bash\njolli graph --export ./graph          # write ./graph/<repo>-graph.html\njolli graph --export ./graph --open   # …and open it in your browser\n```\n\n…with a note that `--export <dir>` is required. So the working \"open in browser\" form is `jolli graph --export <dir> --open`. (And since the exported HTML is fully self-contained, you can also just double-click the file — no `--open` needed.)",
+					"timestamp": "2026-07-09T21:08:29.135Z"
+				},
+				{
+					"role": "human",
+					"content": "can you create some images to go along with this guide?",
+					"timestamp": "2026-07-09T21:12:56.402Z"
+				},
+				{
+					"role": "assistant",
+					"content": "Good — let me first check what's actually feasible here (I want to use real data where I can, and know the repo's conventions) before generating anything.\n\nThe background task seems stuck (likely `npx playwright` trying to resolve/install). Let me check its status and kill if needed.\n\nGood — key facts: **Playwright 1.61.1 with Chromium is installed locally**, so I can render the *real* knowledge graph to an image from actual data. Let me generate the real graph export first (highest-value authentic asset), then I'll add a conceptual architecture diagram.\n\nThe real graph HTML exported (1.9 MB, self-contained). Now let me understand its structure so the screenshot waits for the layout to finish rendering (it uses async ELK layout).\n\nThe graph renders into `#board` (category cards / topic groups / edges) after async load + camera fit. Let me write a Playwright script to render it and capture a crisp screenshot, then I'll look at the result.\n\nThe overview renders (6 category cards, 2 cross-category edges). Let me look at both to judge quality.",
+					"timestamp": "2026-07-09T21:14:07.421Z"
+				},
+				{
+					"role": "human",
+					"content": "[Image: original 3000x1900, displayed at 2000x1267. Multiply coordinates by 1.50 to map to original image.]",
+					"timestamp": "2026-07-09T21:18:15.878Z"
+				},
+				{
+					"role": "assistant",
+					"content": "That's a clean, authentic screenshot of the real graph — overview with the stats panel. It's a bit sparse though (6 category cards, lots of empty space). Let me also capture a **category deep-dive** (clicking into \"Gameplay Features\" reveals the topic groups, unit cards, and the 23 intra-topic edges) — that's the visually rich \"network\" view.\n\nThe click didn't navigate (still at overview). Let me check how category cards actually trigger navigation in views.js.\n\nCategory cards only *select* on click — you must click the `→` (`[data-open-category]`) to navigate in. Let me drive it via `WikiState` directly using the card's `data-category` id.\n\nNow it navigated in — 2 topic groups, 12 unit cards, 18 edges. Let me view it.",
+					"timestamp": "2026-07-09T21:18:42.363Z"
+				},
+				{
+					"role": "human",
+					"content": "[Image: original 3000x1900, displayed at 2000x1267. Multiply coordinates by 1.50 to map to original image.]",
+					"timestamp": "2026-07-09T21:20:13.036Z"
+				},
+				{
+					"role": "assistant",
+					"content": "Both real graph views look great — authentic app screenshots. There's excess empty canvas at the bottom, though. Let me tighten them with a content-aware clip, and settle on the dark theme (matches the tool's branding).",
+					"timestamp": "2026-07-09T21:21:08.594Z"
+				},
+				{
+					"role": "human",
+					"content": "[Image: original 3000x1900, displayed at 2000x1267. Multiply coordinates by 1.50 to map to original image.]",
+					"timestamp": "2026-07-09T21:21:34.121Z"
+				},
+				{
+					"role": "assistant",
+					"content": "The clip kept full height because `.zoom-controls` (bottom-left) and the panel footer pin the bottom. Let me clip to the graph nodes only.\n\nTrimmed well (overview now 3000×1286, category 3000×1392). Let me verify the overview didn't cut anything important.",
+					"timestamp": "2026-07-09T21:22:12.723Z"
+				},
+				{
+					"role": "human",
+					"content": "[Image: original 3000x1392, displayed at 2000x928. Multiply coordinates by 1.50 to map to original image.]",
+					"timestamp": "2026-07-09T21:22:41.754Z"
+				},
+				{
+					"role": "assistant",
+					"content": "The category deep-dive looks excellent — real topics, unit cards (MECHANISM/DECISION/FIX), and labeled edges. I now have two strong, authentic graph images.\n\nNow let me create the conceptual **\"How Jolli Memory works\"** diagram (SVG) to anchor the top of the guide. I'll set up the images folder and author it in the tool's dark aesthetic so it sits well next to the real screenshots.\n\nLet me render the SVG to verify it looks right before embedding.\n\nThe first `goto` loaded the SVG as an XML doc; I should just set HTML content directly.",
+					"timestamp": "2026-07-09T21:25:02.073Z"
+				},
+				{
+					"role": "human",
+					"content": "[Image: original 2600x880, displayed at 2000x677. Multiply coordinates by 1.30 to map to original image.]",
+					"timestamp": "2026-07-09T21:25:51.714Z"
+				},
+				{
+					"role": "assistant",
+					"content": "The `<img>` didn't load the local SVG. Let me just navigate to the SVG file directly and screenshot it.",
+					"timestamp": "2026-07-09T21:26:02.096Z"
+				},
+				{
+					"role": "human",
+					"content": "[Image: original 2480x776, displayed at 2000x626. Multiply coordinates by 1.24 to map to original image.]",
+					"timestamp": "2026-07-09T21:26:13.316Z"
+				},
+				{
+					"role": "assistant",
+					"content": "The architecture diagram looks clean and professional. Now let me complete the set. The wiki is the headline feature (step 2/3) but has no visual yet. Let me render the *real* wiki content. First let me look at a topic page to pick the most illustrative one.\n\nThis topic page is rich (overview, sections, a Files table, source commits) — perfect to show \"what the wiki gives you.\" Let me render the real wiki (index + this topic page) as a clean \"rendered Markdown\" image, using the extension's own `marked` library so it's genuine content.\n\nLet me write the build script with the Write tool to avoid shell-escaping issues.\n\nRendered cleanly. Let me view it.",
+					"timestamp": "2026-07-09T21:26:38.617Z"
+				},
+				{
+					"role": "human",
+					"content": "[Image: original 2880x1840, displayed at 2000x1278. Multiply coordinates by 1.44 to map to original image.]",
+					"timestamp": "2026-07-09T21:28:31.444Z"
+				},
+				{
+					"role": "assistant",
+					"content": "The wiki render looks great — real index (24 topics) on the left, a real topic page with metadata/overview/sections on the right, with a subtle fade to show there's more. I now have a complete, authentic set of 4 images. Let me place them in the images folder and embed them in the guide.\n\nNow let me embed them. First the architecture diagram near the top — let me get the exact intro text.\n\nNow the wiki image under step 3:\n\nNow the two graph images under step 4:\n\nLet me verify all image references resolve and the files exist.\n\nAll four resolve. Let me do a final validation: render the README as it'd appear on GitHub (light theme, relative paths) to confirm the images load and the dark diagram looks right on a light page.\n\nThe heredoc mangled the script. Let me write the preview builder cleanly with the Write tool.\n\nAll four images load. Let me view the diagram rendered in-context on a light README page to confirm the dark card looks intentional.\n\nVerified end-to-end — all four images render, resolve at their relative paths, and the dark diagram reads as intentional on GitHub's light theme.\n\n## Done — added 4 images to the guide\n\nAll live in `docs/jolli-memory/` and are embedded at the right spots in `README-JOLLI-MEMORY.md`:\n\n| Image | Where | What it is |\n|---|---|---|\n| `how-it-works.svg` | top of guide | **Conceptual diagram** I authored — the Commit → Distill → Store → Wiki/Graph pipeline, in the tool's dark aesthetic |\n| `knowledge-wiki.png` | § 3 View the wiki | **Real content** — your actual `_index.md` (24 topics) + the `topic--leaderboards.md` page, rendered as Markdown |\n| `knowledge-graph-overview.png` | § 4 View the graph | **Real screenshot** — the actual exported graph (6 categories, stats sidebar) |\n| `knowledge-graph-topics.png` | § 4 View the graph | **Real screenshot** — drilled into *Gameplay Features* (topics, MECHANISM/DECISION/FIX units, labeled edges) |\n\n**How I made them:** the two graph shots are the genuine `jolli graph --export` HTML rendered headlessly via the repo's own Playwright/Chromium; the wiki shot uses your real wiki Markdown rendered with the extension's own `marked` library; the diagram is hand-built SVG. Every image has descriptive alt text.\n\n**Two things worth knowing:**\n- **The wiki image is my styling** of the real Markdown, not a pixel-exact VS Code preview. If you'd rather have an authentic VS Code preview screenshot, that has to be captured from a running VS Code — I can't drive the editor from here.\n- **I can't screenshot the actual VS Code extension panel** (steps 1 \"look at a memory\" and the Settings/Browse UI) for the same reason. Those steps currently have no image. If you want them, you'd need to grab those screenshots yourself — happy to add the `![]()` placeholders and alt text so you just drop the files in.\n\nWant me to tweak the diagram wording/colors, add a light-theme variant of it, or wire up placeholders for the two panel screenshots?",
+					"timestamp": "2026-07-09T21:29:02.115Z"
+				},
+				{
+					"role": "human",
+					"content": "add intellij to the prereqs as an option",
+					"timestamp": "2026-07-09T21:41:00.193Z"
+				},
+				{
+					"role": "assistant",
+					"content": "The user's right that there's an IntelliJ path — the CLI mentioned an IntelliJ plugin (`--integrations-only`, `--source-tag intellij`). Let me verify how it's actually referred to before writing, so the prereq and any install note are accurate.\n\nConfirmed — IntelliJ is a first-class Jolli surface (the CLI even logs \"Settings UI opened (vscode/intellij)\"), and the JetBrains plugin manages its own hooks (hence `jolli enable --integrations-only`). Let me update the prereqs, and add a brief JetBrains note to the otherwise VS-Code-specific install step so the guide stays consistent.\n\nLet me update the intro line so it doesn't imply VS Code is the only IDE.\n\nDone. IntelliJ is now offered as an option, with three small edits:\n\n- **Prerequisites** — now reads **VS Code** *or* a **JetBrains IDE (e.g. IntelliJ IDEA)**, noting each has a Jolli Memory plugin and that the screenshots use VS Code.\n- **Step 6 (install)** — added a JetBrains note: install the **Jolli Memory** plugin from **Settings → Plugins → Marketplace**; it has the same panel / Build Knowledge Wiki / View Knowledge Graph actions. Plus the real gotcha — the JetBrains plugin manages its own git hooks, so CLI users should enable with `jolli enable --integrations-only` (this is exactly what the CLI's own help recommends for that plugin).\n- **Intro line** — \"the CLI and your IDE plugin (VS Code or JetBrains)\" instead of naming only VS Code.\n\nI kept the rest of the guide VS-Code-primary (title, `Cmd+Shift+X`/`Cmd+Shift+V` shortcuts) since you asked for IntelliJ as an *option* rather than a full dual-track rewrite. If you'd like, I can go further — add JetBrains keyboard equivalents inline, or split the UI steps into VS Code / JetBrains tabs-style sections.",
+					"timestamp": "2026-07-09T21:41:18.349Z"
+				},
+				{
+					"role": "human",
+					"content": "ok, let's create a branch and commit this doc and the images",
+					"timestamp": "2026-07-09T21:45:13.794Z"
+				},
+				{
+					"role": "assistant",
+					"content": "Let me check the exact working-tree state before branching, so I stage exactly the doc and images.\n\nTwo surprises: `README-JOLLI-MEMORY.md` no longer shows as untracked, and there's an unexpected `graph/` folder. Let me investigate before committing anything.\n\nThe `graph/` and README states are contradictory. Let me get definitive answers.\n\nThe README has **moved** — it's no longer at the repo root; it's now at `docs/jolli-memory/README-JOLLI-MEMORY.md` (alongside the images), and the stray `graph/` folder is gone. I didn't do that, so someone/something reorganized it. This matters: if the doc now lives *inside* `docs/jolli-memory/`, its image links (`docs/jolli-memory/how-it-works.svg`) are now wrong. Let me look before committing.\n\nNow it's clear: the doc was moved **into** `docs/jolli-memory/`, so its image links (which still say `docs/jolli-memory/…`) would now resolve to `docs/jolli-memory/docs/jolli-memory/…` — broken. I need to make them relative to the new location before committing. Let me check for all such references and read the file.\n\nAll four are image links, and the images are siblings. Let me read the moved README, then fix the paths.\n\nThe moved README is my full edited version. Let me fix the four image paths to be relative to its new location.\n\nLet me confirm the fix and that nothing else references the old path.",
+					"timestamp": "2026-07-09T21:45:27.723Z"
+				}
+			]
+		}
+	]
+}

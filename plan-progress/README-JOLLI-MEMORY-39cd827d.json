@@ -1,0 +1,91 @@
+{
+	"version": 1,
+	"commitHash": "39cd827d6568fd3b3de6cc7fb74bfa728fb845e3",
+	"commitMessage": "Add Jolli Memory viewing guide with diagrams and screenshots",
+	"commitDate": "2026-07-09T21:48:27.000Z",
+	"planSlug": "README-JOLLI-MEMORY-39cd827d",
+	"originalSlug": "README-JOLLI-MEMORY",
+	"summary": "The developer completed the Jolli Memory viewing guide for the snake-game repo, adding the full README with verified CLI commands, IDE instructions for both VS Code and JetBrains, and four accompanying images (an SVG architecture diagram plus three real screenshots of the wiki and knowledge graph). A second session pushed the jollimemory/summaries/v3 orphan branch to origin after it had fallen 205 commits behind.",
+	"steps": [
+		{
+			"id": "prerequisites",
+			"description": "Prerequisites section listing Node.js 22+, git, and VS Code or JetBrains IDE",
+			"status": "completed",
+			"note": "IntelliJ was added as an explicit option after the initial draft only mentioned VS Code. The JetBrains note was grounded in CLI source inspection (the `--integrations-only` flag and 'Settings UI opened (vscode/intellij)' log), not assumption. The screenshots remain VS Code-primary since IntelliJ was requested as an option rather than a full dual-track rewrite — a potential gap if JetBrains users need keyboard equivalents."
+		},
+		{
+			"id": "1",
+			"description": "Clone (or fork) the repo",
+			"status": "completed",
+			"note": "Documented in the committed README with both clone and fork paths. No code changes were required; the step is fully covered by the written guide."
+		},
+		{
+			"id": "2",
+			"description": "Put the Jolli Memory orphan branch in place",
+			"status": "completed",
+			"note": "Fully documented in the committed README. The guide explicitly warns against checking out the branch and provides the `git branch --list` verification command."
+		},
+		{
+			"id": "3",
+			"description": "Install the Jolli CLI",
+			"status": "completed",
+			"note": "Documented in the committed README with install and verify commands."
+		},
+		{
+			"id": "4",
+			"description": "Sign in",
+			"status": "completed",
+			"note": "A key bug was caught here: the original draft used bare `jolli auth`, which only prints help and does not sign in. Verified against the installed CLI (v0.99.6) that the real command is `jolli auth login`. The fix was the trigger for the entire verification-first approach used throughout the rest of the guide."
+		},
+		{
+			"id": "5",
+			"description": "Enable Jolli Memory in the repo",
+			"status": "completed",
+			"note": "Documented in the committed README including the `jolli status` verification step and the `jolli doctor --fix` recovery path."
+		},
+		{
+			"id": "6",
+			"description": "Install the VS Code extension",
+			"status": "completed",
+			"note": "Documented with exact publisher/extension ID. A JetBrains alternative was added after the human requested IntelliJ as an option, using the real `--integrations-only` flag discovered in CLI source. The assistant offered to add JetBrains keyboard equivalents or split into dual-track sections but this was not pursued — a deferred idea worth revisiting if JetBrains adoption is significant."
+		},
+		{
+			"id": "7",
+			"description": "View the memories",
+			"status": "completed",
+			"note": "Documented in the committed README. The 'Refresh Memories' and 'Enable Jolli Memory' panel fallbacks were included based on extension source inspection."
+		},
+		{
+			"id": "next-1",
+			"description": "Look at a memory (What to do next, step 1)",
+			"status": "completed",
+			"note": "Documented in the committed README. No screenshot was added for the panel memory view because the assistant cannot drive a live VS Code instance; the assistant offered to add placeholder image tags for the human to fill in with their own screenshots — this was not acted on and remains a gap in the visual documentation."
+		},
+		{
+			"id": "next-2",
+			"description": "Build the Knowledge Wiki (What to do next, step 2)",
+			"status": "completed",
+			"note": "Two accuracy-critical findings were baked in: 'Build Knowledge Wiki' silently aborts without a configured Memory Bank folder (`localFolder`), and the provider must be explicitly flipped to `anthropic` when using your own Anthropic key (setting `apiKey` alone is insufficient after signing into Jolli). Both were verified against extension source and CLI config logic. IDE alternatives for folder and key setup were added after the human explicitly requested them, using real UI labels extracted from the minified extension bundle."
+		},
+		{
+			"id": "next-3",
+			"description": "View the wiki (What to do next, step 3)",
+			"status": "completed",
+			"note": "Documented with the real Memory Bank folder path structure and a `knowledge-wiki.png` screenshot generated from actual wiki Markdown using the extension's own `marked` library. The assistant noted this is styled rendering, not a pixel-exact VS Code preview, and offered a real VS Code screenshot as an alternative requiring manual capture — not pursued."
+		},
+		{
+			"id": "next-4",
+			"description": "View the knowledge graph (What to do next, step 4)",
+			"status": "completed",
+			"note": "A bug was caught and fixed: `jolli graph --open` alone errors with 'requires --export <dir>'; `--export` is the only implemented action and `--open` is a modifier. The human flagged this error directly. Two authentic screenshots were generated from the real exported graph HTML using the repo's own Playwright/Chromium — one overview and one category drill-down — rather than mockups. The 'View Knowledge Graph' Command Palette absence was also caught (it is panel-only, `when: 'false'`) and documented."
+		}
+	],
+	"llm": {
+		"model": "claude-haiku-4-5-20251001",
+		"inputTokens": 17187,
+		"outputTokens": 1411,
+		"apiLatencyMs": 29707,
+		"stopReason": null,
+		"source": "jolli-proxy"
+	}
+}

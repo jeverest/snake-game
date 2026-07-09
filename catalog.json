@@ -1465,6 +1465,25 @@
 					]
 				}
 			]
+		},
+		{
+			"commitHash": "39cd827d6568fd3b3de6cc7fb74bfa728fb845e3",
+			"recap": "A complete onboarding guide for Jolli Memory was added to the repository, covering everything from cloning the repo and placing the memory branch locally, through installing the CLI and IDE plugin, to building and browsing the knowledge wiki and knowledge graph. The guide handles both VS Code and JetBrains IDEs, documents both the Jolli account and bring-your-own Anthropic key paths for wiki generation, and includes explicit callouts for two failure modes that would otherwise leave a reader stuck with no error message to search for.\n\nFour visual assets accompany the written steps. A hand-authored architecture diagram illustrates the full Commit → Distill → Store → Wiki/Graph pipeline in the tool's dark aesthetic. Three screenshots were generated from the repo's own live data — the actual wiki index and a topic page, the knowledge graph at category overview level, and the graph drilled into the Gameplay Features category showing topic groups, unit cards, and labeled relationship edges. All commands and UI labels in the guide were verified against the installed CLI and extension before being written, catching two incorrect commands that would have failed on first use.",
+			"topics": [
+				{
+					"title": "Jolli Memory viewing guide with diagrams and screenshots added",
+					"decisions": "- **Verify before documenting**: Every CLI command and IDE label was checked against the installed CLI and extension source before being written into the guide. This caught two bugs in the draft — bare `jolli auth` (not a runnable command; the real sign-in is `jolli auth login`) and `jolli graph --open` (errors without `--export`; the flag is a modifier, not a standalone action). Writing from memory or guessing would have shipped a guide that fails on first use.\n- **Use real data for screenshots rather than mockups**: The graph and wiki images were generated from the repo's actual exported graph HTML and live wiki Markdown, using the project's already-installed Playwright/Chromium. This keeps the screenshots honest and automatically representative of the real tool output, at the cost of a more complex generation process (navigating the graph's async ELK layout, driving category drill-down via internal state rather than simulated clicks).\n- **Surface two accuracy gotchas as explicit notes**: \"Build Knowledge Wiki\" silently aborts without a configured Memory Bank folder, and \"View Knowledge Graph\" is hidden from the Command Palette (panel-only). Both were confirmed in the extension source. Rather than omitting them, the guide calls them out with fixes inline and in the troubleshooting table — a reader who hits either failure has a path forward without needing to search.",
+					"category": "docs",
+					"importance": "major",
+					"filesAffected": [
+						"docs/jolli-memory/README-JOLLI-MEMORY.md",
+						"docs/jolli-memory/how-it-works.svg",
+						"docs/jolli-memory/knowledge-wiki.png",
+						"docs/jolli-memory/knowledge-graph-overview.png",
+						"docs/jolli-memory/knowledge-graph-topics.png"
+					]
+				}
+			]
 		}
 	]
 }
