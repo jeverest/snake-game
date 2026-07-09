@@ -1374,6 +1374,22 @@
 				"insertions": 7,
 				"deletions": 0
 			}
+		},
+		{
+			"commitHash": "74ed7bd38d1d1ddf20b77505b90beaab7f03f2f2",
+			"parentCommitHash": null,
+			"treeHash": "a6776737e5dbac2a6b3db1bd957f6b715ac72003",
+			"commitType": "commit",
+			"commitMessage": "Link to the Jolli Memory guide from the main README",
+			"commitDate": "2026-07-09T23:29:18.000Z",
+			"branch": "docs/readme-link-jolli-guide",
+			"generatedAt": "2026-07-09T23:37:41.879Z",
+			"topicCount": 1,
+			"diffStats": {
+				"filesChanged": 1,
+				"insertions": 7,
+				"deletions": 0
+			}
 		}
 	],
 	"commitAliases": {

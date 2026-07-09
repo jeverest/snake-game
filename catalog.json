@@ -1498,6 +1498,20 @@
 					]
 				}
 			]
+		},
+		{
+			"commitHash": "74ed7bd38d1d1ddf20b77505b90beaab7f03f2f2",
+			"topics": [
+				{
+					"title": "Add Jolli Memory link to main project readme",
+					"decisions": "The link was committed to a new branch rather than the branch the guide originally landed on, because that branch had already been merged. Putting the readme change on its own branch keeps the pull request history clean and avoids committing directly to the main branch.",
+					"category": "docs",
+					"importance": "minor",
+					"filesAffected": [
+						"README.md"
+					]
+				}
+			]
 		}
 	]
 }

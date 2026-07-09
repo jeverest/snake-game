@@ -1,0 +1,54 @@
+{
+	"version": 5,
+	"commitHash": "74ed7bd38d1d1ddf20b77505b90beaab7f03f2f2",
+	"commitMessage": "Link to the Jolli Memory guide from the main README",
+	"commitAuthor": "Joe Hart",
+	"commitDate": "2026-07-09T23:29:18.000Z",
+	"branch": "docs/readme-link-jolli-guide",
+	"generatedAt": "2026-07-09T23:37:41.879Z",
+	"commitType": "commit",
+	"commitSource": "cli",
+	"transcriptEntries": 3,
+	"conversationTurns": 1,
+	"llm": {
+		"model": "claude-sonnet-4-6",
+		"inputTokens": 5269,
+		"outputTokens": 210,
+		"cachedTokens": 0,
+		"apiLatencyMs": 6202,
+		"stopReason": null,
+		"source": "jolli-proxy"
+	},
+	"stats": {
+		"filesChanged": 1,
+		"insertions": 7,
+		"deletions": 0
+	},
+	"topics": [
+		{
+			"title": "Add Jolli Memory link to main project readme",
+			"trigger": "The Jolli Memory viewing guide had already been merged into the repository, but the main readme had no mention of it, leaving it undiscoverable for anyone browsing the project.",
+			"response": "Added a \"Project memory\" section to the bottom of `README.md` with a brief description of Jolli Memory and a link to `docs/jolli-memory/README-JOLLI-MEMORY.md`.",
+			"decisions": "The link was committed to a new branch rather than the branch the guide originally landed on, because that branch had already been merged. Putting the readme change on its own branch keeps the pull request history clean and avoids committing directly to the main branch.",
+			"filesAffected": [
+				"README.md"
+			],
+			"category": "docs",
+			"importance": "minor"
+		}
+	],
+	"conversationTokens": 9137,
+	"conversationTokenBreakdown": {
+		"input": 10,
+		"output": 7742,
+		"cached": 1385
+	},
+	"diffStats": {
+		"filesChanged": 1,
+		"insertions": 7,
+		"deletions": 0
+	},
+	"transcripts": [
+		"7d294137-2370-44f1-b488-90268277158b"
+	]
+}
