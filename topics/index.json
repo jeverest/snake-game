@@ -816,6 +816,29 @@
 				}
 			],
 			"lastUpdatedAt": "2026-07-07T18:08:52.740Z"
+		},
+		{
+			"stableSlug": "jolli-memory-guide",
+			"title": "Jolli Memory Viewing Guide",
+			"summary": "Step-by-step guide to cloning the snake-game repo, setting up Jolli Memory, and viewing memories, wiki, and graph in VS Code or JetBrains.",
+			"relatedBranches": [
+				"docs/jolli-memory-guide"
+			],
+			"sourceRefs": [
+				{
+					"type": "summary",
+					"id": "39cd827d6568fd3b3de6cc7fb74bfa728fb845e3",
+					"timestamp": "2026-07-09T21:48:27.000Z",
+					"branch": "docs/jolli-memory-guide"
+				},
+				{
+					"type": "plan",
+					"id": "README-JOLLI-MEMORY-39cd827d",
+					"timestamp": "2026-07-09T21:48:55.202Z",
+					"branch": "docs/jolli-memory-guide"
+				}
+			],
+			"lastUpdatedAt": "2026-07-09T21:49:25.234Z"
 		}
 	]
 }
