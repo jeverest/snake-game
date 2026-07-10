@@ -1,0 +1,65 @@
+{
+	"version": 5,
+	"commitHash": "4fa4f0e39e37c8ecbd139a88729ab6800283dd4f",
+	"commitMessage": "Document Iron Snake Mode and Playwright tests in README",
+	"commitAuthor": "Joe Hart",
+	"commitDate": "2026-07-10T15:06:25.000Z",
+	"branch": "docs/update-readme",
+	"generatedAt": "2026-07-10T15:07:14.767Z",
+	"commitType": "commit",
+	"commitSource": "cli",
+	"transcriptEntries": 6,
+	"conversationTurns": 3,
+	"llm": {
+		"model": "claude-sonnet-4-6",
+		"inputTokens": 10490,
+		"outputTokens": 4207,
+		"cachedTokens": 0,
+		"apiLatencyMs": 49012,
+		"stopReason": null,
+		"source": "jolli-proxy"
+	},
+	"stats": {
+		"filesChanged": 1,
+		"insertions": 15,
+		"deletions": 2
+	},
+	"topics": [
+		{
+			"title": "Document Iron Snake Mode and Playwright tests, remove stale bot-toggle shortcut",
+			"trigger": "The user asked to create a new branch and make sure the README accurately reflected the current state of the game, since recent work had shipped features that weren't mentioned anywhere in the docs.",
+			"response": "- Created a new branch and audited the README against the actual source code and test files rather than trusting existing text, catching that Iron Snake Mode and the Playwright test suite were both shipped but completely undocumented.\n- Added a description of Iron Snake Mode to the features list and game modes section covering the irregular randomly-shaped boards, interior holes, per-level score goals, and the board reshaping that happens between levels; also added a Testing section documenting the test commands and a Tech Stack entry for the test framework.\n- Removed the README's mention of a keyboard shortcut for toggling bot autoplay mid-game, confirming first that the underlying code no longer has a handler for it.",
+			"decisions": "- **Left the hidden Rainbow Snake surprise undocumented**: even though it was found in the code during the audit, it was intentionally left out of the README so as not to spoil the Easter egg for players who might discover it on their own.\n- **Excluded the Iron Snake exit-door mechanic**: this feature was found only on a separate, unmerged branch and not present in the current codebase, so it was correctly left out of the documentation as not-yet-shipped.\n- **Verified every claim against the code before writing**: rather than editing from memory or assumption, each detail (grid size limits, level-up thresholds, keyboard shortcuts) was checked against the actual source and test files, which is what surfaced the stale bot-toggle shortcut that needed to be removed.",
+			"filesAffected": [
+				"README.md"
+			],
+			"category": "docs",
+			"importance": "minor"
+		},
+		{
+			"title": "Link the Jolli Memory guide from the main README via a clean cherry-picked branch",
+			"trigger": "A memory guide had already been merged into the main branch through a separate pull request, but the link to it from the main README hadn't made it in yet and needed to be added cleanly.",
+			"response": "- Investigated the branch history and determined that the guide itself had landed via a separate merged pull request, but a local commit adding just the README link sat on an older base that predated that merge.\n- Created a fresh branch based on the up-to-date main branch and cherry-picked only the isolated README-link commit onto it, verifying the link target file was actually present on the updated main.\n- Pushed the branch and opened a pull request whose title and description were generated from stored memory of the change rather than written by hand.",
+			"decisions": "Rather than reusing the existing local branch (which was based on an outdated point in history), a new branch was built directly on the updated main and the single relevant commit was cherry-picked onto it, keeping the resulting pull request diff limited to just the README link addition and avoiding any merge conflicts from the already-landed guide content.",
+			"filesAffected": [
+				"README.md"
+			],
+			"category": "docs",
+			"importance": "minor"
+		}
+	],
+	"conversationTokens": 794099,
+	"conversationTokenBreakdown": {
+		"input": 35913,
+		"output": 47181,
+		"cached": 711005
+	},
+	"diffStats": {
+		"filesChanged": 1,
+		"insertions": 15,
+		"deletions": 2
+	},
+	"transcripts": [
+		"c479a68f-1ad5-4f08-87a6-9e1fa863f873"
+	]
+}

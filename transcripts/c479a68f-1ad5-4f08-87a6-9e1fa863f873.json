@@ -1,0 +1,48 @@
+{
+	"sessions": [
+		{
+			"sessionId": "b0932354-5f5e-4cde-b7da-240b521cab3c",
+			"source": "claude",
+			"transcriptPath": "/Users/jeverest/.claude/projects/-Users-jeverest-projects-snake-game/b0932354-5f5e-4cde-b7da-240b521cab3c.jsonl",
+			"entries": [
+				{
+					"role": "assistant",
+					"content": "Clear picture: the guide landed via PR #34, and `origin/main` doesn't have the README link yet. My local `e9bc881` (the link, only touching README.md) sits on top of `96ca498`, which is now an ancestor of `origin/main` — so it'll cherry-pick cleanly onto a fresh branch.\n\nDone. Fresh branch off the updated main, with just the README link change:\n\n- **Branch:** `docs/readme-link-jolli-guide` — based on `origin/main` (which now has the landed guide from PR #34).\n- **Commit:** `74ed7bd` — \"Link to the Jolli Memory guide from the main README\" (1 file, +7 lines, the \"Project memory\" section).\n- Verified the link resolves — `docs/jolli-memory/README-JOLLI-MEMORY.md` is present on main.\n- Clean history: it sits directly on the merge commit `a94161c`, so the PR diff will be just the README addition.\n\nThe stale local `docs/jolli-memory-guide` branch is left as-is (harmless; already merged remotely). Branch is **local only** — want me to push it (and open a PR)?",
+					"timestamp": "2026-07-09T23:37:31.742Z"
+				},
+				{
+					"role": "human",
+					"content": "push it and open a PR",
+					"timestamp": "2026-07-09T23:43:05.631Z"
+				},
+				{
+					"role": "assistant",
+					"content": "I'll push the branch, then use the **jolli-pr** skill to open the PR with a memory-generated description (per this repo's setup).\n\nPushed. Now let me open the PR with a memory-generated description via the jolli-pr skill.\n\nI'll follow the jolli-pr flow. First, let me load the Jolli MCP tools I'll need and check the memory-generation queue (the cherry-picked commit may still be summarizing).\n\nQueue is drained. Now check whether this branch already has an open PR.\n\nCreate mode (no existing PR). Now generate the PR description from Jolli Memory.\n\nDescription generated from memory (`missingCount: 0` — nothing skipped). The branch is already pushed and up to date, so I'll create the PR now, using the Jolli-Memory body verbatim via `--body-file`.\n\nPushed and PR opened. 🎉\n\n**PR #35:** https://github.com/jolliai/snake-game/pull/35\n- **Branch:** `docs/readme-link-jolli-guide` → `main`\n- **Title/body:** generated from Jolli Memory (the \"Project memory\" README addition, with the structured why/decisions/files). No commits were missing memory.\n\nOne optional follow-up from the jolli-pr flow: **want me to push this branch's memory to Jolli** (so the summary is backed up to your Jolli Space)? Yes/no.",
+					"timestamp": "2026-07-09T23:43:13.717Z"
+				}
+			]
+		},
+		{
+			"sessionId": "256d111a-1d28-49b3-9cc0-7ccf92f68d0e",
+			"source": "claude",
+			"transcriptPath": "/Users/jeverest/.claude/projects/-Users-jeverest-projects-snake-game/256d111a-1d28-49b3-9cc0-7ccf92f68d0e.jsonl",
+			"entries": [
+				{
+					"role": "human",
+					"content": "let's create a new branch and then make sure the README is up to date",
+					"timestamp": "2026-07-10T15:03:16.593Z"
+				},
+				{
+					"role": "assistant",
+					"content": "I'll create a new branch and then review the README against the current state of the codebase. Let me start by getting oriented.\n\nBranch `docs/update-readme` created. Now let me verify the README against the actual codebase. I notice recent commits mention \"Iron Snake\" and \"Rainbow Snake\" which aren't in the README. Let me investigate the source and recall prior context.\n\nI have a clear picture now. The README is missing major shipped features — **Iron Snake Mode** (a whole mode with board morphing, interior holes, exit doors) and the **Playwright test harness**. Let me verify a few control claims before editing, since memory notes the \"Disable Bot\" shortcut was removed.\n\nConfirmed — there is **no `B` key handler**; that shortcut was removed (matches memory). Let me verify a couple more claims (grid range, expansion threshold, Iron Snake exit mechanics) so my edits are accurate.\n\nLet me check the exit-door mechanic and the normal-mode grid expansion so I describe both accurately.\n\nJOE-9's \"exit door\" is on an unmerged branch (not in `git log` for main, and no `exit`/`door` refs in `main.ts`), so I'll correctly leave it out. Everything else checks out:\n- Grid expansion at 25% fill / doubling / 5–50 range → accurate\n- `B` bot-toggle shortcut → **removed** (stale in README)\n- **Iron Snake Mode** (menu toggle: irregular boards, interior holes, per-level score goals, board morph) → **shipped, undocumented**\n- **Playwright** test harness → **shipped, undocumented**\n\nI'll leave the Rainbow Snake as the intentional hidden Easter egg it is (documenting it would spoil the surprise). Now the edits:\n\nNow the Testing section and Tech Stack update:\n\nLet me confirm the E2E suite actually has tests (so I'm not documenting a phantom suite), then review the final README.\n\nThe test suite is real (specs for gameplay, menu, game-over, iron-snake, rainbow). Let me do a final read-through of the updated README.\n\nThe README is now up to date. Here's what I did.\n\n## Branch\nCreated `docs/update-readme` off `main`.\n\n## README changes\nI verified each claim against the source (and Jolli recall for history), then fixed the gaps:\n\n**Added — shipped features that were undocumented:**\n- **Iron Snake Mode** — a whole mode (menu toggle) with irregular randomly-carved boards, interior holes, per-level cumulative score goals, and cell-by-cell board morphing between levels. Confirmed in `src/iron-snake.ts` and `src/main.ts`, plus `tests/e2e/iron-snake.spec.ts`.\n- **Testing section + Tech Stack entry** — Playwright E2E harness with `npm test` / `test:ui` / `test:report`. Confirmed the scripts in `package.json` and 5 real spec files under `tests/e2e/`.\n\n**Removed — stale content:**\n- The `B` \"toggle bot autoplay\" control row and the \"toggle bot AI mid-game with `B`\" note. That shortcut was removed in the `chores/cleanup-bugs` work — there's no `b`/`B` handler in `handleKeyPress`.\n\n## Two judgment calls\n- **Rainbow Snake** (~1-in-100 hidden surprise with a hidden leaderboard) — left it **undocumented on purpose**. It's an intentional Easter egg; spelling it out would spoil it. Say the word if you'd rather tease it.\n- **Iron Snake \"exit door\" (JOE-9)** — left it out. It lives on the unmerged `josephhart/joe-9-add-exit` branch (not in `main`'s history, no `exit`/`door` refs in `main.ts`), so it isn't shipped yet.\n\nVerified accurate and left as-is: 11 bots, 25%-fill grid doubling, 5×5–50×50 range, per-mode leaderboards.\n\nWant me to commit this and open a PR (I'd use the `jolli-pr` skill for the description)?",
+					"timestamp": "2026-07-10T15:03:26.179Z"
+				},
+				{
+					"role": "human",
+					"content": "commit this and push to remote",
+					"timestamp": "2026-07-10T15:06:15.242Z"
+				}
+			]
+		}
+	]
+}

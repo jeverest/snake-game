@@ -1512,6 +1512,29 @@
 					]
 				}
 			]
+		},
+		{
+			"commitHash": "4fa4f0e39e37c8ecbd139a88729ab6800283dd4f",
+			"topics": [
+				{
+					"title": "Document Iron Snake Mode and Playwright tests, remove stale bot-toggle shortcut",
+					"decisions": "- **Left the hidden Rainbow Snake surprise undocumented**: even though it was found in the code during the audit, it was intentionally left out of the README so as not to spoil the Easter egg for players who might discover it on their own.\n- **Excluded the Iron Snake exit-door mechanic**: this feature was found only on a separate, unmerged branch and not present in the current codebase, so it was correctly left out of the documentation as not-yet-shipped.\n- **Verified every claim against the code before writing**: rather than editing from memory or assumption, each detail (grid size limits, level-up thresholds, keyboard shortcuts) was checked against the actual source and test files, which is what surfaced the stale bot-toggle shortcut that needed to be removed.",
+					"category": "docs",
+					"importance": "minor",
+					"filesAffected": [
+						"README.md"
+					]
+				},
+				{
+					"title": "Link the Jolli Memory guide from the main README via a clean cherry-picked branch",
+					"decisions": "Rather than reusing the existing local branch (which was based on an outdated point in history), a new branch was built directly on the updated main and the single relevant commit was cherry-picked onto it, keeping the resulting pull request diff limited to just the README link addition and avoiding any merge conflicts from the already-landed guide content.",
+					"category": "docs",
+					"importance": "minor",
+					"filesAffected": [
+						"README.md"
+					]
+				}
+			]
 		}
 	]
 }

@@ -1390,6 +1390,22 @@
 				"insertions": 7,
 				"deletions": 0
 			}
+		},
+		{
+			"commitHash": "4fa4f0e39e37c8ecbd139a88729ab6800283dd4f",
+			"parentCommitHash": null,
+			"treeHash": "c3748d1fcca55dbe7ed6c7bf43e48f2b971f4ff3",
+			"commitType": "commit",
+			"commitMessage": "Document Iron Snake Mode and Playwright tests in README",
+			"commitDate": "2026-07-10T15:06:25.000Z",
+			"branch": "docs/update-readme",
+			"generatedAt": "2026-07-10T15:07:14.767Z",
+			"topicCount": 2,
+			"diffStats": {
+				"filesChanged": 1,
+				"insertions": 15,
+				"deletions": 2
+			}
 		}
 	],
 	"commitAliases": {
