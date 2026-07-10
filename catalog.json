@@ -1566,6 +1566,22 @@
 					]
 				}
 			]
+		},
+		{
+			"commitHash": "0424d329b565a4bbb13d1328e4dacbeff88e992f",
+			"recap": "This work resolved three security alerts that GitHub had flagged against the project's development tooling. After tracing each alert, the issues turned out to affect only the local development server when run on Windows — a file-access bypass and a credential-leak issue in vite, and an arbitrary file-read issue in esbuild — with no exposure in the actual shipped game. Rather than jumping to a new major version of the build tool or forcing an unusual dependency override, the fix used a same-major-version update that happened to widen compatibility just enough to pull in the patched version of the underlying esbuild tool as well, clearing all three alerts at once.\n\nBefore treating the change as complete, it was checked against a full production build and the entire automated end-to-end test suite, both of which passed cleanly, giving confidence the dependency update introduced no regressions. The updated dependency versions are staged and committed locally, with pushing the branch and opening a pull request deliberately held back until requested.",
+			"topics": [
+				{
+					"title": "Patch Dependabot vulnerabilities in vite and esbuild dev dependencies",
+					"decisions": "- **Stayed within the current major version instead of upgrading to the next major release**: Initial analysis suggested the esbuild fix might only be reachable by jumping to a new major version of vite or forcing a dependency override, both of which carry more upgrade risk. Further digging found that a minor vite release had already widened its internal compatibility range to include the patched esbuild version, so the fix landed with a low-risk, same-major-version bump.\n- **Confirmed real-world risk was low before treating this as urgent**: All three vulnerabilities only trigger when running the local development server on Windows and don't reach the production bundle, so the team treated this as a hygiene fix to clear the alerts rather than an emergency patch.\n- **Verified safety with a full build and test pass before considering the change ready**: Rather than trusting the version bump alone, the change was validated against the production build and the complete automated test suite to catch any regression before it could be merged.",
+					"category": "security",
+					"importance": "major",
+					"filesAffected": [
+						"package.json",
+						"package-lock.json"
+					]
+				}
+			]
 		}
 	]
 }

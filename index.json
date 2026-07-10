@@ -1438,6 +1438,22 @@
 				"insertions": 1,
 				"deletions": 1
 			}
+		},
+		{
+			"commitHash": "0424d329b565a4bbb13d1328e4dacbeff88e992f",
+			"parentCommitHash": null,
+			"treeHash": "bf4d97935c83d8664fd36fdabfe92376b3980cbf",
+			"commitType": "commit",
+			"commitMessage": "Patch Dependabot vulns: bump vite to 7.3.6, esbuild to 0.28.1",
+			"commitDate": "2026-07-10T15:45:11.000Z",
+			"branch": "chore/dependabot-vulns",
+			"generatedAt": "2026-07-10T15:45:47.973Z",
+			"topicCount": 1,
+			"diffStats": {
+				"filesChanged": 2,
+				"insertions": 113,
+				"deletions": 113
+			}
 		}
 	],
 	"commitAliases": {
