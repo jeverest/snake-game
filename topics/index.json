@@ -114,7 +114,7 @@
 		{
 			"stableSlug": "project-docs",
 			"title": "Project Documentation & README",
-			"summary": "README.md is the sole doc source, now opens with a real gameplay screenshot; CLAUDE.md guides AI agents via Jolli Memory.",
+			"summary": "README.md is the single source of truth for docs; hero screenshot now showcases Iron Snake mode's irregular board and hole.",
 			"relatedBranches": [
 				"docs/cleanup",
 				"docs/claude-md-jolli-memory",
@@ -208,9 +208,15 @@
 					"id": "7f122af669e4b2c77bfa706155d0f9852363b7d4",
 					"timestamp": "2026-07-10T15:13:12.000Z",
 					"branch": "docs/update-readme"
+				},
+				{
+					"type": "summary",
+					"id": "855bea64044ed960aa5a93a0f20bf1f169aa0a33",
+					"timestamp": "2026-07-10T15:31:56.000Z",
+					"branch": "docs/update-readme"
 				}
 			],
-			"lastUpdatedAt": "2026-07-10T15:14:36.885Z"
+			"lastUpdatedAt": "2026-07-10T15:32:10.487Z"
 		},
 		{
 			"stableSlug": "dev-tooling-config",
