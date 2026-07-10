@@ -878,6 +878,29 @@
 				}
 			],
 			"lastUpdatedAt": "2026-07-09T23:29:37.766Z"
+		},
+		{
+			"stableSlug": "start-screen-redesign",
+			"title": "Start Screen Redesign: Rotating Demo, Expand Panels, Footer",
+			"summary": "Menu now features an animated isometric snake demo, expandable bot-selection panels, and a demoted footer for leaderboards/GitHub.",
+			"relatedBranches": [
+				"backfilled"
+			],
+			"sourceRefs": [
+				{
+					"type": "summary",
+					"id": "59bd7331340f6332ee62e1774b2fb2622fbe163b",
+					"timestamp": "2026-05-13T17:07:41-07:00",
+					"branch": "backfilled"
+				},
+				{
+					"type": "summary",
+					"id": "3e3909722cdf4066f2601d6ea2dce11b60449262",
+					"timestamp": "2026-05-13T17:10:24-07:00",
+					"branch": "backfilled"
+				}
+			],
+			"lastUpdatedAt": "2026-07-10T15:07:14.949Z"
 		}
 	]
 }
