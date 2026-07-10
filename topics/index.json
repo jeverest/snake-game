@@ -669,9 +669,10 @@
 		{
 			"stableSlug": "dependency-maintenance",
 			"title": "Dependency Maintenance: npm Updates",
-			"summary": "npm dependencies were updated via chore commit cd6ac546, merged to main through PR #18 from branch jeverest/chore/npmupdates.",
+			"summary": "npm deps updated via PR #18; vite/esbuild later patched to 7.3.6/0.28.1 to fix Dependabot vulns.",
 			"relatedBranches": [
-				"backfilled"
+				"backfilled",
+				"chore/dependabot-vulns"
 			],
 			"sourceRefs": [
 				{
@@ -685,9 +686,15 @@
 					"id": "d2f765bd7ee9665192df87ef50f379ff9906b079",
 					"timestamp": "2026-05-15T14:56:37-07:00",
 					"branch": "backfilled"
+				},
+				{
+					"type": "summary",
+					"id": "0424d329b565a4bbb13d1328e4dacbeff88e992f",
+					"timestamp": "2026-07-10T15:45:11.000Z",
+					"branch": "chore/dependabot-vulns"
 				}
 			],
-			"lastUpdatedAt": "2026-07-07T15:25:41.149Z"
+			"lastUpdatedAt": "2026-07-10T15:45:48.048Z"
 		},
 		{
 			"stableSlug": "iron-snake-mode",
