@@ -1514,22 +1514,6 @@
 			]
 		},
 		{
-			"commitHash": "855bea64044ed960aa5a93a0f20bf1f169aa0a33",
-			"recap": "The README's hero image was replaced to better represent the game. Instead of the original checkerboard gameplay shot, the top of the README now shows Iron Snake mode in action, with an irregular, non-square board featuring a visible interior hole, the level and goal HUD, the snake, and the apple. The accompanying alt text was updated to match, describing the irregular board and hole rather than the old checkerboard description. The new image was produced by automating gameplay to level 3 and capturing many frames across the board's rotation to find an angle where both the board's unusual shape and the hole were clearly visible.",
-			"topics": [
-				{
-					"title": "Replaced README hero screenshot with an Iron Snake board image",
-					"decisions": "- **Capturing after a level-up rather than mid-game**: the chosen frame was taken right after the snake reached level 3, while the snake was still short. This kept the newly-formed hole unobstructed by the snake's body, since longer snakes tend to cover the board's interior.\n- **Bursting many frames instead of a single capture**: because the board rotates automatically, a single screenshot risked catching an angle where the hole or irregular shape wasn't visible. Capturing across the full rotation and reviewing a spread of frames let the best isometric angle be chosen deliberately rather than by luck.",
-					"category": "docs",
-					"importance": "major",
-					"filesAffected": [
-						"README.md",
-						"docs/screenshot.png"
-					]
-				}
-			]
-		},
-		{
 			"commitHash": "4fa4f0e39e37c8ecbd139a88729ab6800283dd4f",
 			"topics": [
 				{
@@ -1560,6 +1544,22 @@
 					"decisions": "A real, generated gameplay screenshot was created instead of using a placeholder or stock image, since capturing an authentic in-game state gives visitors an accurate preview of what the game actually looks like. Among several candidate shots (menu screen, short bot run, longer bot run, irregular-board mode), the longer gameplay shot was chosen over the others because a longer snake with a visible score, head, and food more clearly showcased the game's isometric visual style than the flatter-angle or shorter-snake alternatives.",
 					"category": "docs",
 					"importance": "minor",
+					"filesAffected": [
+						"README.md",
+						"docs/screenshot.png"
+					]
+				}
+			]
+		},
+		{
+			"commitHash": "855bea64044ed960aa5a93a0f20bf1f169aa0a33",
+			"recap": "The README's hero image was replaced to better represent the game. Instead of the original checkerboard gameplay shot, the top of the README now shows Iron Snake mode in action, with an irregular, non-square board featuring a visible interior hole, the level and goal HUD, the snake, and the apple. The accompanying alt text was updated to match, describing the irregular board and hole rather than the old checkerboard description. The new image was produced by automating gameplay to level 3 and capturing many frames across the board's rotation to find an angle where both the board's unusual shape and the hole were clearly visible.",
+			"topics": [
+				{
+					"title": "Replaced README hero screenshot with an Iron Snake board image",
+					"decisions": "- **Capturing after a level-up rather than mid-game**: the chosen frame was taken right after the snake reached level 3, while the snake was still short. This kept the newly-formed hole unobstructed by the snake's body, since longer snakes tend to cover the board's interior.\n- **Bursting many frames instead of a single capture**: because the board rotates automatically, a single screenshot risked catching an angle where the hole or irregular shape wasn't visible. Capturing across the full rotation and reviewing a spread of frames let the best isometric angle be chosen deliberately rather than by luck.",
+					"category": "docs",
+					"importance": "major",
 					"filesAffected": [
 						"README.md",
 						"docs/screenshot.png"
