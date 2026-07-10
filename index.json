@@ -1422,6 +1422,22 @@
 				"insertions": 4,
 				"deletions": 0
 			}
+		},
+		{
+			"commitHash": "855bea64044ed960aa5a93a0f20bf1f169aa0a33",
+			"parentCommitHash": null,
+			"treeHash": "0464ccbbf2684820bee6ccaffdd6c4af4eeffe1b",
+			"commitType": "commit",
+			"commitMessage": "Use an Iron Snake board for the hero screenshot",
+			"commitDate": "2026-07-10T15:31:56.000Z",
+			"branch": "docs/update-readme",
+			"generatedAt": "2026-07-10T15:32:10.397Z",
+			"topicCount": 1,
+			"diffStats": {
+				"filesChanged": 2,
+				"insertions": 1,
+				"deletions": 1
+			}
 		}
 	],
 	"commitAliases": {
