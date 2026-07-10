@@ -1406,6 +1406,22 @@
 				"insertions": 15,
 				"deletions": 2
 			}
+		},
+		{
+			"commitHash": "7f122af669e4b2c77bfa706155d0f9852363b7d4",
+			"parentCommitHash": null,
+			"treeHash": "357f9be984146ff411b62fea1851c1166b81ff1b",
+			"commitType": "commit",
+			"commitMessage": "Add gameplay screenshot to top of README",
+			"commitDate": "2026-07-10T15:13:12.000Z",
+			"branch": "docs/update-readme",
+			"generatedAt": "2026-07-10T15:14:36.725Z",
+			"topicCount": 1,
+			"diffStats": {
+				"filesChanged": 2,
+				"insertions": 4,
+				"deletions": 0
+			}
 		}
 	],
 	"commitAliases": {

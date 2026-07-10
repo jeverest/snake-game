@@ -1,0 +1,55 @@
+{
+	"version": 5,
+	"commitHash": "7f122af669e4b2c77bfa706155d0f9852363b7d4",
+	"commitMessage": "Add gameplay screenshot to top of README",
+	"commitAuthor": "Joe Hart",
+	"commitDate": "2026-07-10T15:13:12.000Z",
+	"branch": "docs/update-readme",
+	"generatedAt": "2026-07-10T15:14:36.725Z",
+	"commitType": "commit",
+	"commitSource": "cli",
+	"transcriptEntries": 5,
+	"conversationTurns": 2,
+	"llm": {
+		"model": "claude-sonnet-4-6",
+		"inputTokens": 8684,
+		"outputTokens": 915,
+		"cachedTokens": 0,
+		"apiLatencyMs": 12193,
+		"stopReason": null,
+		"source": "jolli-proxy"
+	},
+	"stats": {
+		"filesChanged": 2,
+		"insertions": 4,
+		"deletions": 0
+	},
+	"topics": [
+		{
+			"title": "Add real gameplay screenshot to top of README",
+			"trigger": "The user asked to add a picture to the top of the README to give visitors a visual preview of the game.",
+			"response": "- Investigated the existing repo images and found no real gameplay screenshot existed, only framework logos and documentation assets.\n- Used the project's existing browser-automation test harness to spin up the game and capture several candidate images: a menu/hero screen, a populated bot-driven gameplay board, and an \"Iron Snake\" irregular-board variant, via a temporary capture script.\n- Selected the strongest candidate (a long snake with a score of 13, visible head/eyes, food, full isometric board, and HUD), saved it as `docs/screenshot.png`, removed the temporary capture script, and added an image tag with descriptive alt text to the top of `README.md`.",
+			"decisions": "A real, generated gameplay screenshot was created instead of using a placeholder or stock image, since capturing an authentic in-game state gives visitors an accurate preview of what the game actually looks like. Among several candidate shots (menu screen, short bot run, longer bot run, irregular-board mode), the longer gameplay shot was chosen over the others because a longer snake with a visible score, head, and food more clearly showcased the game's isometric visual style than the flatter-angle or shorter-snake alternatives.",
+			"filesAffected": [
+				"README.md",
+				"docs/screenshot.png"
+			],
+			"category": "docs",
+			"importance": "minor"
+		}
+	],
+	"conversationTokens": 140207,
+	"conversationTokenBreakdown": {
+		"input": 14625,
+		"output": 38897,
+		"cached": 86685
+	},
+	"diffStats": {
+		"filesChanged": 2,
+		"insertions": 4,
+		"deletions": 0
+	},
+	"transcripts": [
+		"9b3e86da-8ece-4e04-ae5e-03277de31014"
+	]
+}

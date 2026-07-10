@@ -1535,6 +1535,21 @@
 					]
 				}
 			]
+		},
+		{
+			"commitHash": "7f122af669e4b2c77bfa706155d0f9852363b7d4",
+			"topics": [
+				{
+					"title": "Add real gameplay screenshot to top of README",
+					"decisions": "A real, generated gameplay screenshot was created instead of using a placeholder or stock image, since capturing an authentic in-game state gives visitors an accurate preview of what the game actually looks like. Among several candidate shots (menu screen, short bot run, longer bot run, irregular-board mode), the longer gameplay shot was chosen over the others because a longer snake with a visible score, head, and food more clearly showcased the game's isometric visual style than the flatter-angle or shorter-snake alternatives.",
+					"category": "docs",
+					"importance": "minor",
+					"filesAffected": [
+						"README.md",
+						"docs/screenshot.png"
+					]
+				}
+			]
 		}
 	]
 }
