@@ -2,9 +2,10 @@
 	"schemaVersion": 1,
 	"stableSlug": "dependency-maintenance",
 	"title": "Dependency Maintenance: npm Updates",
-	"content": "## npm Dependency Updates\n\nThe project's npm dependencies were updated as a routine maintenance task. The update was performed on the `jeverest/chore/npmupdates` branch and merged into the main branch via **Pull Request #18**.\n\n### What Was Done\n\n- All npm dependencies were updated (commit `cd6ac546`).\n- The changes were reviewed and merged through the standard pull request process (PR #18, merge commit `d2f765bd`).\n\n### Process\n\nnpm dependency updates in this project follow a branch-and-PR workflow:\n1. A dedicated chore branch is created (e.g., `jeverest/chore/npmupdates`).\n2. Dependencies are updated and committed with a `chore: update npm dependencies` message.\n3. The branch is merged to main via a pull request.",
+	"content": "## npm Dependency Updates\n\n### Current State\n\n- Baseline npm dependencies were updated in a routine maintenance pass (commit `cd6ac546`), reviewed and merged via **Pull Request #18** (merge commit `d2f765bd`) from the `jeverest/chore/npmupdates` branch.\n- `vite` is now pinned at `^7.3.6` (up from `^7.1.7`) and `esbuild` at `0.28.1`, patching three Dependabot-flagged vulnerabilities (1 high, 1 moderate, 1 low) in the build-tooling dev dependencies (commit `0424d329`).\n\n### Security Patch Details (vite / esbuild)\n\n- The vulnerabilities were all Windows-only, dev-server-only issues (a file-access-restriction bypass and a credential leak via vite's launch-editor helper, plus an arbitrary file read in esbuild's dev server) — none affected the shipped production game bundle.\n- Because real-world risk was low, this was treated as a hygiene fix to clear Dependabot alerts rather than an emergency patch.\n- The fix stayed within the current major version of vite: a minor vite release (`^7.3.6`) had already widened its internal esbuild compatibility range to accept the patched `0.28.x` line, avoiding the higher-risk path of jumping to a new vite major version or forcing a dependency override.\n- `package.json`'s vite requirement was bumped to `^7.3.6`, then a dependency audit fix pulled `esbuild` up to `0.28.1`.\n- The change was verified with a clean vulnerability scan, a successful production build, and a full Playwright end-to-end suite pass (13/13 tests) before being considered ready to merge.\n\n### Process\n\nnpm dependency updates in this project follow a branch-and-PR workflow:\n1. A dedicated chore branch is created (e.g., `jeverest/chore/npmupdates`).\n2. Dependencies are updated and committed (e.g., `chore: update npm dependencies`, or a targeted fix commit for specific advisories).\n3. Changes are validated with a production build and the full automated test suite before merging.\n4. The branch is merged to main via a pull request.",
 	"relatedBranches": [
-		"backfilled"
+		"backfilled",
+		"chore/dependabot-vulns"
 	],
 	"sourceRefs": [
 		{
@@ -18,7 +19,13 @@
 			"id": "d2f765bd7ee9665192df87ef50f379ff9906b079",
 			"timestamp": "2026-05-15T14:56:37-07:00",
 			"branch": "backfilled"
+		},
+		{
+			"type": "summary",
+			"id": "0424d329b565a4bbb13d1328e4dacbeff88e992f",
+			"timestamp": "2026-07-10T15:45:11.000Z",
+			"branch": "chore/dependabot-vulns"
 		}
 	],
-	"lastUpdatedAt": "2026-07-07T15:25:41.149Z"
+	"lastUpdatedAt": "2026-07-10T15:45:48.048Z"
 }
