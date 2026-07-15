@@ -1582,6 +1582,37 @@
 					]
 				}
 			]
+		},
+		{
+			"commitHash": "669b3d5870fd55c721344e20ce21b56554ffa5bc",
+			"recap": "This work introduced a new collectible power-up system to the snake game, adding three effects: Double Points, Slow-Mo, and Shrink. Power-ups spawn occasionally after eating regular food, sit on the board for a limited time with a visible expiry blink, and can be triggered directly via a testing URL parameter. Collecting one shows a pop-up toast and, for the timed effects, a HUD badge with a countdown; Shrink applies instantly by trimming the snake's tail. The feature is available in single-player and bot-vs-bot modes, deliberately left out of human two-player matches to avoid confusion over whose pickup effect applies, and Slow-Mo affects the whole game's pace whenever either snake holds it in bot-vs-bot.\n\nAlongside the player-facing feature, every one of the twelve automated bot opponents was updated to recognize and react to power-ups. Each bot got its own personality-appropriate appetite for pursuing pickups: aggressive bots chase Double Points and Slow-Mo hard, a tightly-coiling bot strongly favors Shrink to avoid trapping itself, cautious bots only pursue when it's safe, and bots with fixed movement patterns like sweeping, spiraling, or zigzagging only detour when a pickup naturally falls along their route. A safety limit ensures no bot will ever risk a self-trap just to grab a power-up, and pursuit decisions account for whether a pickup is reachable and likely to still be there by the time the bot arrives.",
+			"topics": [
+				{
+					"title": "Add collectible power-ups: Double Points, Slow-Mo, and Shrink",
+					"decisions": "- **Excluded from human two-player mode**: Power-ups only appear in single-player and bot-vs-bot modes, since a shared power-up in human two-player would create ambiguity over which player's pickup effect applies.\n- **Per-snake effects, shared clock for Slow-Mo**: Double Points and Shrink apply only to the snake that grabbed them, but Slow-Mo slows the single shared game loop whenever either snake holds it, since there's only one tick timer driving the board.\n- **Deterministic test override**: A URL parameter forces a specific power-up type to spawn directly in the snake's path, making the feature reliably testable without waiting on random spawn odds.",
+					"category": "feature",
+					"importance": "major",
+					"filesAffected": [
+						"src/main.ts",
+						"src/game-types.ts",
+						"index.html",
+						"src/style.css"
+					]
+				},
+				{
+					"title": "Teach all snake bots to react to power-ups without losing their personality",
+					"decisions": "- **Shared scoring helper over bespoke per-bot logic**: A single reusable scoring function with configurable weights let every bot gain power-up awareness through one added line each, minimizing the risk of accidentally altering each bot's carefully tuned existing behavior.\n- **Hard safety ceiling on pursuit bonus**: The power-up bonus is capped well below each bot's existing self-preservation thresholds, guaranteeing that no bot will ever choose a power-up over avoiding a fatal self-trap.\n- **Distance- and lifetime-aware evaluation**: Bots discount or ignore power-ups that are unreachable or likely to disappear before they can arrive, so pursuit choices reflect realistic timing rather than chasing something that will vanish.",
+					"category": "feature",
+					"importance": "major",
+					"filesAffected": [
+						"src/bots/power-up.ts",
+						"src/bots/bot-types.ts",
+						"src/bots/chaser-bot.ts",
+						"src/bots/coiler-bot.ts",
+						"src/main.ts"
+					]
+				}
+			]
 		}
 	]
 }

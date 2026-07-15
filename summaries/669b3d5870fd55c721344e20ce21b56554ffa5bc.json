@@ -1,0 +1,84 @@
+{
+	"version": 5,
+	"commitHash": "669b3d5870fd55c721344e20ce21b56554ffa5bc",
+	"commitMessage": "Add power-ups (Double Points, Slow-Mo, Shrink)",
+	"commitAuthor": "Joe Hart",
+	"commitDate": "2026-07-15T23:47:05.000Z",
+	"branch": "feature/power-ups",
+	"generatedAt": "2026-07-15T23:47:54.715Z",
+	"commitType": "commit",
+	"commitSource": "cli",
+	"transcriptEntries": 2,
+	"conversationTurns": 1,
+	"llm": {
+		"model": "claude-sonnet-4-6",
+		"inputTokens": 36343,
+		"outputTokens": 3933,
+		"cachedTokens": 0,
+		"apiLatencyMs": 46156,
+		"stopReason": null,
+		"source": "jolli-proxy"
+	},
+	"stats": {
+		"filesChanged": 19,
+		"insertions": 794,
+		"deletions": 33
+	},
+	"topics": [
+		{
+			"title": "Add collectible power-ups: Double Points, Slow-Mo, and Shrink",
+			"trigger": "The game needed a new gameplay hook beyond ordinary food, giving players occasional temporary boosts or twists during a run.",
+			"response": "- Added a new power-up collectible system in the main game engine: after eating food there's a chance a Double Points, Slow-Mo, or Shrink pickup spawns on the board, lingers for a limited number of moves, and visibly blinks as it nears expiry.\n- Double Points doubles score gains for a set duration, Slow-Mo stretches the game's tick speed for a duration (affecting the shared clock even in two-snake bot matches), and Shrink instantly trims several tail segments off the collecting snake.\n- Added HUD elements (a status badge showing the active effect and countdown, and a pop-up toast naming the pickup just collected) plus color-coded visuals per power-up type, and a URL override (`?powerup=type` or `off`) to force deterministic spawns for testing.",
+			"decisions": "- **Excluded from human two-player mode**: Power-ups only appear in single-player and bot-vs-bot modes, since a shared power-up in human two-player would create ambiguity over which player's pickup effect applies.\n- **Per-snake effects, shared clock for Slow-Mo**: Double Points and Shrink apply only to the snake that grabbed them, but Slow-Mo slows the single shared game loop whenever either snake holds it, since there's only one tick timer driving the board.\n- **Deterministic test override**: A URL parameter forces a specific power-up type to spawn directly in the snake's path, making the feature reliably testable without waiting on random spawn odds.",
+			"filesAffected": [
+				"src/main.ts",
+				"src/game-types.ts",
+				"index.html",
+				"src/style.css"
+			],
+			"category": "feature",
+			"importance": "major"
+		},
+		{
+			"title": "Teach all snake bots to react to power-ups without losing their personality",
+			"trigger": "Once power-ups existed on the board, the automated bots needed to notice and optionally pursue them, but each bot has a distinct movement style that shouldn't be flattened into all bots simply beelining for the nearest pickup.",
+			"response": "- Built a shared power-up scoring helper module that every bot calls with one added line, using a per-bot \"appetite\" configuration (overall pursuit strength, per-type bonus multipliers, and an optional gating rule) so each bot's existing scoring logic stays intact.\n- Extended the shared bot data types and the position-analysis routine (in the main game and the menu demo) to compute the shortest path from a candidate move to the power-up, so pursuit decisions account for reachability and how long the pickup will remain on the board.\n- Tuned all twelve bots individually: e.g. the aggressive Chaser bot favors Double Points and Slow-Mo, the tightly-coiling bot strongly favors Shrink, the ambush bot only strikes for pickups within its lurking range, the survival-focused bot never diverts if doing so would strand it, and the perimeter/zigzag/spiral bots only take detours that fit their natural movement pattern.",
+			"decisions": "- **Shared scoring helper over bespoke per-bot logic**: A single reusable scoring function with configurable weights let every bot gain power-up awareness through one added line each, minimizing the risk of accidentally altering each bot's carefully tuned existing behavior.\n- **Hard safety ceiling on pursuit bonus**: The power-up bonus is capped well below each bot's existing self-preservation thresholds, guaranteeing that no bot will ever choose a power-up over avoiding a fatal self-trap.\n- **Distance- and lifetime-aware evaluation**: Bots discount or ignore power-ups that are unreachable or likely to disappear before they can arrive, so pursuit choices reflect realistic timing rather than chasing something that will vanish.",
+			"filesAffected": [
+				"src/bots/power-up.ts",
+				"src/bots/bot-types.ts",
+				"src/bots/chaser-bot.ts",
+				"src/bots/coiler-bot.ts",
+				"src/main.ts"
+			],
+			"category": "feature",
+			"importance": "major"
+		}
+	],
+	"recap": "This work introduced a new collectible power-up system to the snake game, adding three effects: Double Points, Slow-Mo, and Shrink. Power-ups spawn occasionally after eating regular food, sit on the board for a limited time with a visible expiry blink, and can be triggered directly via a testing URL parameter. Collecting one shows a pop-up toast and, for the timed effects, a HUD badge with a countdown; Shrink applies instantly by trimming the snake's tail. The feature is available in single-player and bot-vs-bot modes, deliberately left out of human two-player matches to avoid confusion over whose pickup effect applies, and Slow-Mo affects the whole game's pace whenever either snake holds it in bot-vs-bot.\n\nAlongside the player-facing feature, every one of the twelve automated bot opponents was updated to recognize and react to power-ups. Each bot got its own personality-appropriate appetite for pursuing pickups: aggressive bots chase Double Points and Slow-Mo hard, a tightly-coiling bot strongly favors Shrink to avoid trapping itself, cautious bots only pursue when it's safe, and bots with fixed movement patterns like sweeping, spiraling, or zigzagging only detour when a pickup naturally falls along their route. A safety limit ensures no bot will ever risk a self-trap just to grab a power-up, and pursuit decisions account for whether a pickup is reachable and likely to still be there by the time the bot arrives.",
+	"conversationTokens": 81237,
+	"conversationTokenBreakdown": {
+		"input": 16,
+		"output": 4521,
+		"cached": 76700
+	},
+	"conversationModels": [
+		{
+			"model": "claude-opus-4-8",
+			"provider": "anthropic",
+			"input": 16,
+			"output": 4521,
+			"cached": 76700
+		}
+	],
+	"estimatedCostUsd": 0.59248,
+	"pricesAsOf": "2026-07-04",
+	"diffStats": {
+		"filesChanged": 19,
+		"insertions": 794,
+		"deletions": 33
+	},
+	"transcripts": [
+		"175d547b-1fec-4e54-8b7f-c50c9ffb3b42"
+	]
+}

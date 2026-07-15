@@ -1454,6 +1454,22 @@
 				"insertions": 113,
 				"deletions": 113
 			}
+		},
+		{
+			"commitHash": "669b3d5870fd55c721344e20ce21b56554ffa5bc",
+			"parentCommitHash": null,
+			"treeHash": "e7b91c1708460947b603d18a6e54f4ebc201d726",
+			"commitType": "commit",
+			"commitMessage": "Add power-ups (Double Points, Slow-Mo, Shrink)",
+			"commitDate": "2026-07-15T23:47:05.000Z",
+			"branch": "feature/power-ups",
+			"generatedAt": "2026-07-15T23:47:54.715Z",
+			"topicCount": 2,
+			"diffStats": {
+				"filesChanged": 19,
+				"insertions": 794,
+				"deletions": 33
+			}
 		}
 	],
 	"commitAliases": {

@@ -1,0 +1,21 @@
+{
+	"sessions": [
+		{
+			"sessionId": "a56aa8c0-13a5-4e6b-a7ea-14e822ef43c0",
+			"source": "claude",
+			"transcriptPath": "/Users/jeverest/.claude/projects/-Users-jeverest-projects-snake-game/a56aa8c0-13a5-4e6b-a7ea-14e822ef43c0.jsonl",
+			"entries": [
+				{
+					"role": "human",
+					"content": "what is the status of this branch?",
+					"timestamp": "2026-07-15T21:47:28.265Z"
+				},
+				{
+					"role": "assistant",
+					"content": "I'll check the git state and recall prior context for this branch.\n\n`feature/power-ups` has **no commits of its own yet** — it's level with `main` (`git log main..HEAD` is empty). Everything is uncommitted work in the working tree, and Jolli Memory has no records for it (nothing's been committed to capture).\n\n**Working tree — all unstaged, nothing added:**\n\n- **2 new files:**\n  - `src/bots/power-up.ts` — the power-up implementation\n  - `tests/e2e/powerups.spec.ts` — Playwright coverage for it\n- **17 modified files:**\n  - `src/game-types.ts`, `src/main.ts`, `src/menu-demo.ts` — core game wiring\n  - All 12 bots (`ambusher`, `chaser`, `coiler`, `edge-runner`, `explorer`, `hunter`, `nomad`, `spiral`, `survival`, `sweeper`, `zigzag`) plus `bot-types.ts` — bots being made power-up-aware\n  - `index.html`, `src/style.css` — UI/styling\n\n**In short:** an in-progress power-ups feature. New power-up module + e2e test, with the game core and every bot touched to integrate it. No commits, no PR, nothing pushed — so there's no recorded history or prior-decision context to recall for this branch yet.\n\nWant me to look at the actual diff to summarize *what* the power-ups feature does, or is the working-tree state all you needed?",
+					"timestamp": "2026-07-15T21:47:38.282Z"
+				}
+			]
+		}
+	]
+}
