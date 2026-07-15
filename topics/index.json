@@ -920,6 +920,23 @@
 				}
 			],
 			"lastUpdatedAt": "2026-07-10T15:07:14.949Z"
+		},
+		{
+			"stableSlug": "power-ups",
+			"title": "Power-Ups: Double Points, Slow-Mo, Shrink",
+			"summary": "Collectible power-ups (Double Points, Slow-Mo, Shrink) spawn in single-player/bot modes; all bots are power-up aware.",
+			"relatedBranches": [
+				"feature/power-ups"
+			],
+			"sourceRefs": [
+				{
+					"type": "summary",
+					"id": "669b3d5870fd55c721344e20ce21b56554ffa5bc",
+					"timestamp": "2026-07-15T23:47:05.000Z",
+					"branch": "feature/power-ups"
+				}
+			],
+			"lastUpdatedAt": "2026-07-15T23:47:54.813Z"
 		}
 	]
 }
