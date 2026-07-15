@@ -1,0 +1,18 @@
+{
+	"schemaVersion": 1,
+	"stableSlug": "power-ups",
+	"title": "Power-Ups: Double Points, Slow-Mo, Shrink",
+	"content": "## Overview\nThe game includes a collectible power-up system offering temporary boosts or twists during a run, layered on top of ordinary food. Three power-up types exist:\n\n- **Double Points** -- doubles score gains for the collecting snake for a set duration.\n- **Slow-Mo** -- stretches the game's tick speed for a duration. Since there is only one shared tick timer driving the board, this affects the *entire* shared game loop, including in bot-vs-bot matches with two snakes, even though only one snake collected it.\n- **Shrink** -- instantly trims several tail segments off the collecting snake.\n\nDouble Points and Shrink are per-snake effects (only apply to whichever snake grabbed them), while Slow-Mo is effectively global because it modifies the shared clock.\n\n## Availability\nPower-ups only appear in **single-player** and **bot-vs-bot** modes. They are excluded from **human two-player mode**, since a shared power-up pickup would create ambiguity over which player's effect applies.\n\n## Spawning and lifecycle\nAfter eating food, there's a chance a power-up spawns on the board. It lingers for a limited number of moves and visibly blinks as it nears expiry, then disappears if uncollected.\n\nA URL parameter (`?powerup=type` or `?powerup=off`) forces a specific power-up type to spawn deterministically directly in the snake's path, making the feature testable without waiting on random spawn odds.\n\n## HUD and visuals\n- A status badge shows the currently active effect and its countdown.\n- A pop-up toast names the pickup just collected.\n- Each power-up type has distinct color-coded visuals on the board.\n\n## Bot awareness\nAll bots (twelve total) are power-up aware via a shared scoring helper (`src/bots/power-up.ts`) rather than bespoke per-bot logic, so each bot gains awareness through a single added line without disturbing its existing tuned behavior.\n\n- Each bot has a configurable \"appetite\": overall pursuit strength, per-type bonus multipliers, and an optional gating rule.\n- The pursuit bonus is hard-capped well below each bot's self-preservation thresholds, so no bot will ever choose a power-up over avoiding a fatal self-trap.\n- Scoring is distance- and lifetime-aware: the shared bot data types and position-analysis routine (used both in the main game and the menu demo) compute the shortest path from a candidate move to the power-up, so bots discount or ignore pickups that are unreachable or likely to expire before they can arrive.\n\nExamples of per-bot tuning:\n- The aggressive Chaser bot favors Double Points and Slow-Mo.\n- The tightly-coiling Coiler bot strongly favors Shrink.\n- The ambush bot only strikes for pickups within its lurking range.\n- The survival-focused bot never diverts if doing so would strand it.\n- Perimeter/zigzag/spiral bots only take detours that fit their natural movement pattern.\n\n## Key files\n- `src/main.ts` -- power-up spawn/lifecycle, HUD, URL override, bot integration\n- `src/game-types.ts` -- power-up type definitions\n- `index.html`, `src/style.css` -- HUD elements and per-type visuals\n- `src/bots/power-up.ts` -- shared scoring helper\n- `src/bots/bot-types.ts` -- shared bot data types extended for power-up reachability\n- `src/bots/chaser-bot.ts`, `src/bots/coiler-bot.ts` -- example per-bot appetite tuning",
+	"relatedBranches": [
+		"feature/power-ups"
+	],
+	"sourceRefs": [
+		{
+			"type": "summary",
+			"id": "669b3d5870fd55c721344e20ce21b56554ffa5bc",
+			"timestamp": "2026-07-15T23:47:05.000Z",
+			"branch": "feature/power-ups"
+		}
+	],
+	"lastUpdatedAt": "2026-07-15T23:47:54.813Z"
+}
