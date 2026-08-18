@@ -5,7 +5,7 @@ test.describe('Main menu', () => {
   test('renders the title, a fresh high score, and the core buttons', async ({ page }) => {
     await openMenu(page)
 
-    await expect(page.locator('.menu-title')).toHaveText('Snake Game')
+    await expect(page.locator('.menu-title')).toHaveText('Jolli Snake Game')
     // localStorage is empty in a fresh browser context, so the high score is 0.
     await expect(page.locator('#high-score')).toHaveText('0')
 
